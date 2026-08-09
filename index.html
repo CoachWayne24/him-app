@@ -6908,12 +6908,10 @@ function App() {
           --vg-accent-safe: color-mix(in srgb, var(--accent) 70%, #C9A96E 30%);
         }
         .role-coach.app.coach-hq-view {
-          background-color: #080705;
-          background-image:
-            radial-gradient(ellipse at 30% 15%, rgba(255,255,255,0.02), transparent 40%),
-            radial-gradient(ellipse at 70% 60%, rgba(255,255,255,0.012), transparent 45%),
-            radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 55%);
-          background-size: 100% 100%;
+          background-color: #0a0908;
+          background-image: url("./coach-hq-blacktop.png");
+          background-repeat: repeat;
+          background-position: top left;
         }
         .role-coach .card { background: #1B1F23; border: 1px solid #2E3438; border-radius: 8px; }
         .role-coach .card, .role-coach .day-col, .role-coach .palette-item, .role-coach .lib-row { border-style: dashed; }
@@ -8439,7 +8437,7 @@ function App() {
               , React.createElement('div', { className: "player-greeting",}
                 , (() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; })(), (coachFullName || _optionalChain([gSession, 'optionalAccess', _83a => _83a.user, 'optionalAccess', _84a => _84a.email])) ? `, ${(coachFullName || gSession.user.email).split(/[\s@]/)[0]}` : ""
               )
-              , React.createElement('div', { className: "coach-hq-emblem",}, React.createElement('img', { className: "coach-hq-mark-img", src: "./vision-mark.png", alt: "HIM.",} ))
+              , React.createElement('div', { className: "coach-hq-emblem",}, React.createElement('img', { className: "coach-hq-mark-img", src: "./vision-mark-v3-final.png", alt: "HIM.",} ))
               , React.createElement('div', { className: "coach-hq-title",}, "Coach HQ" )
 
               , React.createElement('div', { className: "coach-hq-card",}
