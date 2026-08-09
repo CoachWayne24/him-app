@@ -5616,10 +5616,14 @@ function App() {
     try { await window.storage.set("coach-tab-order", JSON.stringify(ids)); } catch (e34) {}
   };
 
-  const handleTileDown = (scope, id) => (e) => {
+  const handleTileDown = (scope, id, fromHandle) => (e) => {
     const startX = e.clientX, startY = e.clientY;
     const pointerId = e.pointerId;
-    const targetEl = e.currentTarget;
+    // Resolve to the whole tile even when the press originates from a nested handle,
+    // so the drag-follow transform moves the full row, not just the handle icon.
+    // For the unchanged player-scope call sites (bound directly to the card), this
+    // resolves to the same element as before.
+    const targetEl = (e.currentTarget.closest && e.currentTarget.closest("[data-tile-id]")) || e.currentTarget;
     const timer = setTimeout(() => {
       const p = pendingDragRef.current;
       if (p && p.id === id && p.scope === scope) {
@@ -5630,7 +5634,7 @@ function App() {
         if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e36) {} }
       }
     }, LONG_PRESS_MS);
-    pendingDragRef.current = { scope, id, startX, startY, timer, targetEl };
+    pendingDragRef.current = { scope, id, startX, startY, timer, targetEl, fromHandle };
   };
   const handleTilePointerMove = (items, e) => {
     if (draggingTileId) {
@@ -5685,7 +5689,7 @@ function App() {
       dragScope.current = null;
     } else if (pending) {
       clearTimeout(pending.timer);
-      if (onTapNavigate) onTapNavigate(pending.id);
+      if (onTapNavigate && !pending.fromHandle) onTapNavigate(pending.id);
     }
     pendingDragRef.current = null;
   };
@@ -7792,11 +7796,24 @@ function App() {
 
         .my-bag-artwork-entry { display: block; width: 100%; max-width: 460px; margin: 18px auto 0; padding: 0; border: none; background: transparent; cursor: pointer; line-height: 0; transition: transform 0.14s ease; }
         .my-bag-artwork-entry:active { transform: scale(0.98); }
-        .my-bag-artwork-img { display: block; width: 100%; height: auto; border-radius: 14px; }
+        .my-bag-artwork-img { display: block; width: 100%; height: auto; }
 
         .ctc-pin-btn { flex-shrink: 0; background: transparent; border: none; padding: 6px; font-size: 13px; color: #4A4437; cursor: pointer; transition: color 0.15s ease, transform 0.12s ease; }
         .ctc-pin-btn:active { transform: scale(0.88); }
         .coach-hq-view .ctc-pin-btn.pinned { color: var(--vg-primary); }
+
+        /* Dedicated drag handle — touch-action:none from initial render (not toggled),
+           which is the actual fix for iOS Safari: WebKit locks in a touch-action
+           decision very early in a gesture and won't reliably honor a later class-based
+           change, unlike Chromium. Isolating drag-start to this small permanent-none
+           area means iOS never has to reconsider — it knows from first touch. */
+        .ctc-drag-handle { flex-shrink: 0; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px;
+          width: 34px; height: 34px; padding: 8px; margin: -8px -6px -8px 2px; background: transparent; border: none; cursor: grab;
+          touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+        .ctc-grip-dot { width: 3.5px; height: 3.5px; border-radius: 50%; background: #4A4437; transition: background 0.15s ease; justify-self: center; align-self: center; }
+        .ctc-drag-handle.active { cursor: grabbing; }
+        .ctc-drag-handle.active .ctc-grip-dot { background: #9C9280; }
+        .coach-tool-card.dragging .ctc-drag-handle .ctc-grip-dot { background: #C7BBA0; }
         .pin-limit-msg { font-family: 'Space Mono', monospace; font-size: 11.5px; color: #C7BBA0; background: rgba(217,174,63,0.08); border: 1px solid rgba(217,174,63,0.25); border-radius: 10px; padding: 8px 12px; margin: -4px 0 10px; text-align: center; }
         .hub-card span { font-family: 'Space Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; text-align: center; }
         .hub-card:hover { border-color: var(--accent); }
@@ -8504,7 +8521,7 @@ function App() {
                 )
 
                 , React.createElement('button', { className: "my-bag-artwork-entry", onClick: () => setMyBagOpen(true), "aria-label": "Open My Bag — all coaching tools",}
-                  , React.createElement('img', { className: "my-bag-artwork-img", src: "./my-bag-artwork.png", alt: "My Bag — your coaching tools",} )
+                  , React.createElement('img', { className: "my-bag-artwork-img", src: "./my-bag-artwork-final.png", alt: "My Bag — your coaching tools",} )
                 )
 
                 , React.createElement('div', { className: "card mission-card", style: { maxWidth: 460, margin: "18px auto 0" },}
@@ -8644,7 +8661,7 @@ function App() {
                     key: it.id,
                     'data-tile-id': it.id,
                     className: `coach-tool-card ${draggingTileId === it.id ? "dragging" : ""}`,
-                    onPointerDown: handleTileDown("coach", it.id),}
+                    onClick: () => setTab(it.id),}
 
                     , React.createElement('span', { className: "ctc-icon",}, React.createElement('i', { className: `fa-solid fa-${it.faIcon} ctc-icon-glyph`,} ))
                     , React.createElement('span', { className: "ctc-text",}
@@ -8665,6 +8682,18 @@ function App() {
                           , React.createElement('i', { className: `${isPinned ? "fa-solid" : "fa-regular"} fa-bookmark`,} )
                         );
                       })()
+                    , React.createElement('button', {
+                        className: `ctc-drag-handle ${draggingTileId === it.id ? "active" : ""}`,
+                        onPointerDown: handleTileDown("coach", it.id, true),
+                        onClick: (e) => e.stopPropagation(),
+                        "aria-label": "Drag to reorder",}
+                        , React.createElement('span', { className: "ctc-grip-dot",} )
+                        , React.createElement('span', { className: "ctc-grip-dot",} )
+                        , React.createElement('span', { className: "ctc-grip-dot",} )
+                        , React.createElement('span', { className: "ctc-grip-dot",} )
+                        , React.createElement('span', { className: "ctc-grip-dot",} )
+                        , React.createElement('span', { className: "ctc-grip-dot",} )
+                      )
                   )
                 );
               })
