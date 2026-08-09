@@ -5595,7 +5595,7 @@ function App() {
   const dragScope = useRef(null); // "player" | "coach"
   const pendingDragRef = useRef(null); // { id, scope, startX, startY, timer, targetEl } — set on pointerdown, promoted to a real drag only after a genuine long-press
   const LONG_PRESS_MS = 450;
-  const MOVE_CANCEL_PX = 10;
+  const MOVE_CANCEL_PX = 18; // was 10 — too tight for real touch input; ordinary finger tremor during a 450ms hold routinely exceeded it, cancelling the drag before it ever started
 
   const movePlayerTile = async (items, id, dir) => {
     const ids = items.map((i) => i.id);
@@ -5634,6 +5634,7 @@ function App() {
   };
   const handleTilePointerMove = (items, e) => {
     if (draggingTileId) {
+      try { e.preventDefault(); } catch (e39) {}
       const pending = pendingDragRef.current;
       if (pending && pending.targetEl) {
         const dx = e.clientX - pending.startX;
@@ -7788,12 +7789,11 @@ function App() {
         .ctc-stat { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); margin-top: 3px; text-shadow: 0 0 8px rgba(217,174,63,0.35); }
         .ctc-arrow { flex-shrink: 0; font-size: 22px; color: #6B6255; }
         .coach-hq-view .coach-section-label { padding-left: 14px; color: #9C9280; opacity: 1; }
-        .my-bag-entry { position: relative; display: block; width: 100%; max-width: 460px; margin: 4px auto 14px; height: 92px; padding: 0; border: none; background: transparent; cursor: pointer; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.45)); transition: transform 0.14s ease; }
-        .my-bag-entry:active { transform: scale(0.97); }
-        .my-bag-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-        .my-bag-content { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
-        .my-bag-label { font-family: 'Anton', sans-serif; font-size: 21px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--vg-highlight); text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
-        .my-bag-arrow { font-size: 22px; color: var(--vg-primary); }
+
+        .my-bag-artwork-entry { display: block; width: 100%; max-width: 460px; margin: 18px auto 0; padding: 0; border: none; background: transparent; cursor: pointer; line-height: 0; transition: transform 0.14s ease; }
+        .my-bag-artwork-entry:active { transform: scale(0.98); }
+        .my-bag-artwork-img { display: block; width: 100%; height: auto; border-radius: 14px; }
+
         .ctc-pin-btn { flex-shrink: 0; background: transparent; border: none; padding: 6px; font-size: 13px; color: #4A4437; cursor: pointer; transition: color 0.15s ease, transform 0.12s ease; }
         .ctc-pin-btn:active { transform: scale(0.88); }
         .coach-hq-view .ctc-pin-btn.pinned { color: var(--vg-primary); }
@@ -7896,6 +7896,8 @@ function App() {
 
         /* ============ COACH HQ ============ */
         .coach-hq { text-align: center; padding: 18px 16px 4px; position: relative; z-index: 2; }
+        .my-bag-screen { min-height: 100vh; text-align: left; }
+        .my-bag-screen .back-to-profile-btn { text-align: left; }
         .coach-hq-emblem { display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
         .coach-hq-mark-img { width: 178px; height: auto; object-fit: contain; display: block; }
         @keyframes coach-hq-pulse { 0%, 100% { box-shadow: 0 0 20px rgba(217,174,63,0.26), 0 0 42px rgba(217,174,63,0.1), inset 0 1px 0 rgba(255,255,255,0.06); } 50% { box-shadow: 0 0 28px rgba(217,174,63,0.4), 0 0 56px rgba(217,174,63,0.18), inset 0 1px 0 rgba(255,255,255,0.08); } }
@@ -8410,7 +8412,7 @@ function App() {
 
       , section === "coach" && canCoach && tab === "" && React.createElement(PremiumAmbient, { noGrid: true,} )
 
-      , section === "coach" && canCoach && tab === "" && coachTabOrderLoaded && (() => {
+      , section === "coach" && canCoach && tab === "" && !myBagOpen && coachTabOrderLoaded && (() => {
         const items = coachTabOrder && coachTabOrder.length
           ? coachTabOrder.map((id) => COACH_HUB_ITEMS.find((i) => i.id === id)).filter(Boolean)
           : COACH_HUB_ITEMS;
@@ -8501,6 +8503,10 @@ function App() {
                   )
                 )
 
+                , React.createElement('button', { className: "my-bag-artwork-entry", onClick: () => setMyBagOpen(true), "aria-label": "Open My Bag — all coaching tools",}
+                  , React.createElement('img', { className: "my-bag-artwork-img", src: "./my-bag-artwork.png", alt: "My Bag — your coaching tools",} )
+                )
+
                 , React.createElement('div', { className: "card mission-card", style: { maxWidth: 460, margin: "18px auto 0" },}
                   , React.createElement('div', { className: "mission-title",}, "Today's Practice" )
                   , !coachDashboard.loaded ? React.createElement('div', { className: "lock-note",}, "Loading…") : coachDashboard.todayPractice ? (
@@ -8570,14 +8576,7 @@ function App() {
               )
             )
 
-            , myBagOpen && React.createElement('button', { className: "back-to-profile-btn", onClick: () => setMyBagOpen(false),}, "← Back to Coach HQ"    )
-            , myBagOpen && React.createElement('div', { className: "field-label coach-section-label", style: { marginTop: 14 },}, "My Bag — All Tools"   )
-            , myBagOpen && pinLimitMsg && React.createElement('div', { className: "pin-limit-msg",}, "Your HQ is full. Unpin a tool to add this one."          )
-            , myBagOpen && React.createElement('div', { className: "reorder-tip-row",}
-              , React.createElement('button', { className: "reorder-tip-btn", onClick: () => setShowReorderTip((s) => !s),}, "ⓘ")
-              , showReorderTip && React.createElement('div', { className: "reorder-tip-bubble",}, "Press and hold a tab, then drag to reorder it."         )
-            )
-            , !myBagOpen && coachPinnedLoaded && (() => {
+            , coachPinnedLoaded && (() => {
               const pinnedItems = coachPinnedTools && coachPinnedTools.length
                 ? coachPinnedTools.map((id) => COACH_HUB_ITEMS.find((i) => i.id === id)).filter(Boolean)
                 : items.slice(0, 4);
@@ -8596,84 +8595,84 @@ function App() {
                       )
                     ))
                   )
-                  , React.createElement('button', { className: "my-bag-entry", onClick: () => setMyBagOpen(true), "aria-label": "Open My Bag — all coaching tools",}
-                      , React.createElement('svg', { className: "my-bag-svg", viewBox: "0 0 320 108", preserveAspectRatio: "none", xmlns: "http://www.w3.org/2000/svg",}
-                        , React.createElement('ellipse', { cx: "26", cy: "62", rx: "16", ry: "36", fill: "#141310", stroke: "var(--vg-primary)", strokeWidth: "2",} )
-                        , React.createElement('ellipse', { cx: "294", cy: "62", rx: "16", ry: "36", fill: "#141310", stroke: "var(--vg-primary)", strokeWidth: "2",} )
-                        , React.createElement('rect', { x: "26", y: "26", width: "268", height: "72", rx: "8", fill: "#141310", stroke: "var(--vg-primary)", strokeWidth: "2",} )
-                        , React.createElement('path', { d: "M 122 26 Q 122 2 145 2 L 175 2 Q 198 2 198 26", fill: "none", stroke: "var(--vg-primary)", strokeWidth: "3", strokeLinecap: "round",} )
-                        , React.createElement('line', { x1: "160", y1: "30", x2: "160", y2: "90", stroke: "var(--vg-muted)", strokeWidth: "1.5", opacity: "0.6", strokeDasharray: "1 5", strokeLinecap: "round",} )
-                        , React.createElement('line', { x1: "26", y1: "62", x2: "294", y2: "62", stroke: "var(--vg-muted)", strokeWidth: "1", opacity: "0.35",} )
-                      )
-                      , React.createElement('span', { className: "my-bag-content",}
-                        , React.createElement('span', { className: "my-bag-label",}, "My Bag" )
-                        , React.createElement('span', { className: "my-bag-arrow",}, "›")
-                      )
-                    )
-                )
-              );
-            })()
-            , myBagOpen && (() => {
-              const toolStat = (id) => {
-                switch (id) {
-                  case "library": return `${library.length} Drill${library.length === 1 ? "" : "s"}`;
-                  case "builder": {
-                    if (!coachHqStats.loaded) return null;
-                    if (!coachHqStats.nextPractice) return "No practice set";
-                    const d = new Date(coachHqStats.nextPractice.start_time);
-                    const isToday = d.toDateString() === new Date().toDateString();
-                    return `Next: ${isToday ? "Today" : d.toLocaleDateString([], { month: "short", day: "numeric" })} ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
-                  }
-                  case "whiteboard": return coachToolStats.loaded ? `${coachToolStats.savedPlays} Saved Play${coachToolStats.savedPlays === 1 ? "" : "s"}` : null;
-                  case "gamestats": return coachToolStats.loaded ? `${coachToolStats.gamesLogged} Game${coachToolStats.gamesLogged === 1 ? "" : "s"} Logged` : null;
-                  case "gameday": return coachToolStats.loaded ? (coachToolStats.gamesLogged > 0 ? `${coachToolStats.wins}-${coachToolStats.losses} Record` : "No games yet") : null;
-                  case "bracket": return coachToolStats.loaded ? (coachToolStats.brackets > 0 ? `${coachToolStats.brackets} Bracket${coachToolStats.brackets === 1 ? "" : "s"}` : "No bracket yet") : null;
-                  case "notes": return coachToolStats.loaded ? `${coachToolStats.notes} Note${coachToolStats.notes === 1 ? "" : "s"}` : null;
-                  case "starters": return `${STARTER_WORKOUTS_SEED.length} Workouts`;
-                  case "requests": return `${requests.length} Pending`;
-                  case "quotes": return `${quotes.length} Quotes`;
-                  default: return null;
-                }
-              };
-              return (
-                React.createElement('div', { className: "coach-card-list", onPointerMove: (e) => handleTilePointerMove(items, e), onPointerUp: () => endTileDrag(items, (id) => setTab(id)), onPointerCancel: () => endTileDrag(items, null),}
-                  , items.map((it, i) => {
-                    const stat = toolStat(it.id);
-                    return (
-                      React.createElement('div', {
-                        key: it.id,
-                        'data-tile-id': it.id,
-                        className: `coach-tool-card ${draggingTileId === it.id ? "dragging" : ""}`,
-                        onPointerDown: handleTileDown("coach", it.id),}
-
-                        , React.createElement('span', { className: "ctc-icon",}, React.createElement('i', { className: `fa-solid fa-${it.faIcon} ctc-icon-glyph`,} ))
-                        , React.createElement('span', { className: "ctc-text",}
-                          , React.createElement('span', { className: "ctc-title",}, it.label)
-                          , React.createElement('span', { className: "ctc-sub",}, it.sub)
-                          , stat && React.createElement('span', { className: "ctc-stat",}, stat)
-                        )
-                        , React.createElement('span', { className: "ctc-arrow",}, "›")
-                        , (() => {
-                            const fallbackOrder = (coachTabOrder && coachTabOrder.length) ? coachTabOrder : COACH_HUB_ITEMS.map((i) => i.id);
-                            const effectivePinned = coachPinnedTools !== null ? coachPinnedTools : fallbackOrder.slice(0, 4);
-                            const isPinned = effectivePinned.includes(it.id);
-                            return React.createElement('button', {
-                              className: `ctc-pin-btn ${isPinned ? "pinned" : ""}`,
-                              onPointerDown: (e) => e.stopPropagation(),
-                              onClick: (e) => { e.stopPropagation(); togglePinnedTool(it.id); },
-                              title: isPinned ? "Unpin from Coach HQ" : "Pin to Coach HQ",}
-                              , React.createElement('i', { className: `${isPinned ? "fa-solid" : "fa-regular"} fa-bookmark`,} )
-                            );
-                          })()
-                      )
-                    );
-                  })
                 )
               );
             })()
           )
         );
       })()
+
+      , section === "coach" && canCoach && tab === "" && myBagOpen && coachTabOrderLoaded && (() => {
+        const items = coachTabOrder && coachTabOrder.length
+          ? coachTabOrder.map((id) => COACH_HUB_ITEMS.find((i) => i.id === id)).filter(Boolean)
+          : COACH_HUB_ITEMS;
+        const toolStat = (id) => {
+          switch (id) {
+            case "library": return `${library.length} Drill${library.length === 1 ? "" : "s"}`;
+            case "builder": {
+              if (!coachHqStats.loaded) return null;
+              if (!coachHqStats.nextPractice) return "No practice set";
+              const d = new Date(coachHqStats.nextPractice.start_time);
+              const isToday = d.toDateString() === new Date().toDateString();
+              return `Next: ${isToday ? "Today" : d.toLocaleDateString([], { month: "short", day: "numeric" })} ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+            }
+            case "whiteboard": return coachToolStats.loaded ? `${coachToolStats.savedPlays} Saved Play${coachToolStats.savedPlays === 1 ? "" : "s"}` : null;
+            case "gamestats": return coachToolStats.loaded ? `${coachToolStats.gamesLogged} Game${coachToolStats.gamesLogged === 1 ? "" : "s"} Logged` : null;
+            case "gameday": return coachToolStats.loaded ? (coachToolStats.gamesLogged > 0 ? `${coachToolStats.wins}-${coachToolStats.losses} Record` : "No games yet") : null;
+            case "bracket": return coachToolStats.loaded ? (coachToolStats.brackets > 0 ? `${coachToolStats.brackets} Bracket${coachToolStats.brackets === 1 ? "" : "s"}` : "No bracket yet") : null;
+            case "notes": return coachToolStats.loaded ? `${coachToolStats.notes} Note${coachToolStats.notes === 1 ? "" : "s"}` : null;
+            case "starters": return `${STARTER_WORKOUTS_SEED.length} Workouts`;
+            case "requests": return `${requests.length} Pending`;
+            case "quotes": return `${quotes.length} Quotes`;
+            default: return null;
+          }
+        };
+        return (
+          React.createElement('div', { className: "coach-hq my-bag-screen",}
+            , React.createElement('button', { className: "back-to-profile-btn", onClick: () => setMyBagOpen(false),}, "← Back to Coach HQ"    )
+            , React.createElement('div', { className: "field-label coach-section-label", style: { marginTop: 14 },}, "My Bag — All Tools"   )
+            , pinLimitMsg && React.createElement('div', { className: "pin-limit-msg",}, "Your HQ is full. Unpin a tool to add this one."          )
+            , React.createElement('div', { className: "reorder-tip-row",}
+              , React.createElement('button', { className: "reorder-tip-btn", onClick: () => setShowReorderTip((s) => !s),}, "ⓘ")
+              , showReorderTip && React.createElement('div', { className: "reorder-tip-bubble",}, "Press and hold a tab, then drag to reorder it."         )
+            )
+            , React.createElement('div', { className: "coach-card-list", onPointerMove: (e) => handleTilePointerMove(items, e), onPointerUp: () => endTileDrag(items, (id) => setTab(id)), onPointerCancel: () => endTileDrag(items, null),}
+              , items.map((it, i) => {
+                const stat = toolStat(it.id);
+                return (
+                  React.createElement('div', {
+                    key: it.id,
+                    'data-tile-id': it.id,
+                    className: `coach-tool-card ${draggingTileId === it.id ? "dragging" : ""}`,
+                    onPointerDown: handleTileDown("coach", it.id),}
+
+                    , React.createElement('span', { className: "ctc-icon",}, React.createElement('i', { className: `fa-solid fa-${it.faIcon} ctc-icon-glyph`,} ))
+                    , React.createElement('span', { className: "ctc-text",}
+                      , React.createElement('span', { className: "ctc-title",}, it.label)
+                      , React.createElement('span', { className: "ctc-sub",}, it.sub)
+                      , stat && React.createElement('span', { className: "ctc-stat",}, stat)
+                    )
+                    , React.createElement('span', { className: "ctc-arrow",}, "›")
+                    , (() => {
+                        const fallbackOrder = (coachTabOrder && coachTabOrder.length) ? coachTabOrder : COACH_HUB_ITEMS.map((i) => i.id);
+                        const effectivePinned = coachPinnedTools !== null ? coachPinnedTools : fallbackOrder.slice(0, 4);
+                        const isPinned = effectivePinned.includes(it.id);
+                        return React.createElement('button', {
+                          className: `ctc-pin-btn ${isPinned ? "pinned" : ""}`,
+                          onPointerDown: (e) => e.stopPropagation(),
+                          onClick: (e) => { e.stopPropagation(); togglePinnedTool(it.id); },
+                          title: isPinned ? "Unpin from Coach HQ" : "Pin to Coach HQ",}
+                          , React.createElement('i', { className: `${isPinned ? "fa-solid" : "fa-regular"} fa-bookmark`,} )
+                        );
+                      })()
+                  )
+                );
+              })
+            )
+          )
+        );
+      })()
+
       , section === "coach" && canCoach && tab === "" && myBagOpen && coachAccentLoaded && (
         React.createElement('div', { className: "card team-colors-card hp-glass"  ,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowTeamColors((s) => !s),}
@@ -8723,7 +8722,7 @@ function App() {
         )
       )
 
-      , section === "coach" && canCoach && tab === "" && (
+      , section === "coach" && canCoach && tab === "" && !myBagOpen && (
         React.createElement('div', { className: "card team-colors-card" ,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowTeamCoaches((s) => !s),}
             , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Team Coaches" )
@@ -8766,7 +8765,7 @@ function App() {
         )
       )
 
-      , section === "coach" && canCoach && tab === "" && (
+      , section === "coach" && canCoach && tab === "" && !myBagOpen && (
         React.createElement('div', { className: "card team-colors-card" ,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowJoinRequests((s) => !s),}
             , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Join Requests" , pendingJoinRequests.length > 0 ? ` (${pendingJoinRequests.length})` : "")
