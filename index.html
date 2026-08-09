@@ -6909,9 +6909,22 @@ function App() {
         }
         .role-coach.app.coach-hq-view {
           background-color: #0a0908;
-          background-image: url("./coach-hq-blacktop.png");
-          background-repeat: repeat;
-          background-position: top left;
+          background-image:
+            linear-gradient(to bottom,
+              rgba(0,0,0,0) 0px,
+              rgba(0,0,0,0) 520px,
+              rgba(0,0,0,0.08) 560px,
+              rgba(0,0,0,0.22) 600px,
+              rgba(0,0,0,0.42) 640px,
+              rgba(0,0,0,0.62) 670px,
+              rgba(0,0,0,0.80) 695px,
+              rgba(0,0,0,0.94) 712px,
+              rgba(0,0,0,1) 722px,
+              rgba(0,0,0,1) 100%
+            ),
+            url("./coach-hq-blacktop.png");
+          background-repeat: no-repeat, repeat;
+          background-position: top left, top left;
         }
         .role-coach .card { background: #1B1F23; border: 1px solid #2E3438; border-radius: 8px; }
         .role-coach .card, .role-coach .day-col, .role-coach .palette-item, .role-coach .lib-row { border-style: dashed; }
@@ -7914,7 +7927,7 @@ function App() {
         .my-bag-screen { min-height: 100vh; text-align: left; }
         .my-bag-screen .back-to-profile-btn { text-align: left; }
         .coach-hq-emblem { display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
-        .coach-hq-mark-img { width: 178px; height: auto; object-fit: contain; display: block; }
+        .coach-hq-mark-img { width: 216px; height: auto; object-fit: contain; display: block; }
         @keyframes coach-hq-pulse { 0%, 100% { box-shadow: 0 0 20px rgba(217,174,63,0.26), 0 0 42px rgba(217,174,63,0.1), inset 0 1px 0 rgba(255,255,255,0.06); } 50% { box-shadow: 0 0 28px rgba(217,174,63,0.4), 0 0 56px rgba(217,174,63,0.18), inset 0 1px 0 rgba(255,255,255,0.08); } }
         .coach-hq-title { font-family: 'Anton', sans-serif; font-size: clamp(24px, 5vh, 34px); letter-spacing: 0.08em; text-transform: uppercase;
           background: linear-gradient(120deg, var(--vg-highlight), var(--vg-primary) 55%, var(--vg-muted));
