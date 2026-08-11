@@ -5802,7 +5802,7 @@ function App() {
   const [pendingJoinRequests, setPendingJoinRequests] = useState([]);
   const [coachHqStats, setCoachHqStats] = useState({ loaded: false, activePlayers: 0, nextPractice: null, teamMessages: 0, pendingRequests: 0 });
   const [coachToolStats, setCoachToolStats] = useState({ loaded: false, savedPlays: 0, gamesLogged: 0, wins: 0, losses: 0, notes: 0, brackets: 0 });
-  const [coachDashboard, setCoachDashboard] = useState({ loaded: false, todayPractice: null, upcomingEvents: [], recentActivity: [], recentMessages: [], streakHighlights: [], attentionPlayers: [], huddleSchedule: null, huddleUnread: null });
+  const [coachDashboard, setCoachDashboard] = useState({ loaded: false, todayEvents: [], todayEventsTotal: 0, upcomingEvents: [], recentActivity: [], recentMessages: [], streakHighlights: [], attentionPlayers: [], huddleSchedule: null, huddleUnread: null });
   const [joinRequestsLoading, setJoinRequestsLoading] = useState(false);
   const loadJoinRequests = async (teamId) => {
     if (!teamId) return;
@@ -5874,7 +5874,7 @@ function App() {
           sb.from("games").select("team_score, opponent_score").eq("team_id", activeCoachTeamId).not("team_score", "is", null).not("opponent_score", "is", null),
           sb.from("practice_notes").select("id", { count: "exact", head: true }).eq("team_id", activeCoachTeamId),
           sb.from("brackets").select("id", { count: "exact", head: true }).eq("team_id", activeCoachTeamId),
-          sb.from("team_events").select("id, title, start_time, location").eq("team_id", activeCoachTeamId).gte("start_time", todayStart.toISOString()).lte("start_time", todayEnd.toISOString()).order("start_time").limit(1),
+          sb.from("team_events").select("id, title, start_time, location, event_type", { count: "exact" }).eq("team_id", activeCoachTeamId).gte("start_time", todayStart.toISOString()).lte("start_time", todayEnd.toISOString()).order("start_time").limit(5),
           sb.from("team_events").select("id, title, start_time").eq("team_id", activeCoachTeamId).gte("start_time", new Date().toISOString()).order("start_time").limit(5),
           sb.from("practice_notes").select("notes, day_label, created_at").eq("team_id", activeCoachTeamId).order("created_at", { ascending: false }).limit(3),
           sb.from("team_plays").select("name, created_at").eq("team_id", activeCoachTeamId).order("created_at", { ascending: false }).limit(3),
@@ -5964,7 +5964,8 @@ function App() {
           });
           setCoachDashboard({
             loaded: true,
-            todayPractice: (todayRes.data && todayRes.data[0]) || null,
+            todayEvents: todayRes.data || [],
+            todayEventsTotal: todayRes.count || 0,
             upcomingEvents: upcomingRes.data || [],
             recentActivity: activityItems,
             recentMessages,
@@ -8472,9 +8473,12 @@ function App() {
                   return (
                     React.createElement(React.Fragment, null
                       , coachTeams.length > 0 && (
-                        React.createElement('div', { className: "profile-switch-dropdown-wrap", style: { marginBottom: 4 },}
+                        React.createElement('div', { className: "profile-switch-dropdown-wrap", style: { marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 },}
                           , React.createElement('select', { className: "profile-switch-dropdown coach-hq-select" , value: activeId || "", onChange: (e) => setActiveCoachTeamId(e.target.value),}
                             , coachTeams.map((t) => React.createElement('option', { key: t.id, value: t.id,}, t.name))
+                          )
+                          , React.createElement('button', { onClick: () => setTab("teamsettings"), "aria-label": "Team Settings", style: { background: "none", border: "none", color: "#9C9280", fontSize: 15, cursor: "pointer", padding: 4, lineHeight: 1, opacity: 0.75 },}
+                            , React.createElement('i', { className: "fa-solid fa-gear",} )
                           )
                         )
                       )
@@ -8529,13 +8533,26 @@ function App() {
             , myTeams.some((t) => t.role === "coach") && (
               React.createElement(React.Fragment, null
                 , React.createElement('div', { className: "card mission-card", style: { maxWidth: 460, margin: "18px auto 0", cursor: "pointer" }, onClick: () => setTab("builder"),}
-                  , React.createElement('div', { className: "mission-title",}, "Today's Practice" )
-                  , !coachDashboard.loaded ? React.createElement('div', { className: "lock-note",}, "Loading…") : coachDashboard.todayPractice ? (
-                    React.createElement('div', { className: "mission-body",}, coachDashboard.todayPractice.title || "Practice", " · "  , new Date(coachDashboard.todayPractice.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), coachDashboard.todayPractice.location ? ` · ${coachDashboard.todayPractice.location}` : "")
-                  ) : (
+                  , React.createElement('div', { className: "mission-title",}, "Today" )
+                  , !coachDashboard.loaded ? React.createElement('div', { className: "lock-note",}, "Loading…") : coachDashboard.todayEvents.length === 0 ? (
                     React.createElement(React.Fragment, null
                       , React.createElement('div', { className: "mission-body",}, "Nothing scheduled today."  )
-                      , React.createElement('div', { className: "mission-body", style: { marginTop: 6, fontWeight: 600, color: "var(--vg-highlight)" },}, "Schedule Practice ›" )
+                      , React.createElement('div', { className: "mission-body", style: { marginTop: 6, fontWeight: 600, color: "var(--vg-highlight)" },}, "+ Add Event" )
+                    )
+                  ) : (
+                    React.createElement(React.Fragment, null
+                      , coachDashboard.todayEvents.map((ev) => {
+                          const typeIcon = ev.event_type === "practice" ? "fa-basketball" : ev.event_type === "game" ? "fa-trophy" : "fa-calendar-day";
+                          const typeLabel = ev.event_type ? ev.event_type[0].toUpperCase() + ev.event_type.slice(1) : "Event";
+                          return React.createElement('div', { key: ev.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "4px 0" },}
+                            , React.createElement('i', { className: `fa-solid ${typeIcon}`, style: { width: 16, textAlign: "center", fontSize: 13, flexShrink: 0, color: "var(--vg-primary)" },} )
+                            , React.createElement('span', { className: "mission-body", style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },}, ev.title || typeLabel)
+                            , React.createElement('span', { className: "mission-body", style: { flexShrink: 0, opacity: 0.8 },}, new Date(ev.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))
+                          );
+                        })
+                      , coachDashboard.todayEventsTotal > coachDashboard.todayEvents.length && (
+                        React.createElement('div', { className: "mission-body", style: { marginTop: 4, opacity: 0.7, fontStyle: "italic" },}, `+${coachDashboard.todayEventsTotal - coachDashboard.todayEvents.length} more today`)
+                      )
                     )
                   )
                 )
@@ -8559,7 +8576,7 @@ function App() {
                     if (coachHqStats.loaded && coachHqStats.pendingRequests > 0) {
                       huddleItems.push({
                         key: "join-requests",
-                        onClick: () => setShowJoinRequests(true),
+                        onClick: () => { setTab("teamsettings"); setShowJoinRequests(true); },
                         icon: "fa-user-plus",
                         label: `${coachHqStats.pendingRequests} Join Request${coachHqStats.pendingRequests === 1 ? "" : "s"} Waiting`,
                         detail: "Review players requesting access",
@@ -8716,7 +8733,11 @@ function App() {
         );
       })()
 
-      , section === "coach" && canCoach && tab === "" && myBagOpen && coachAccentLoaded && (
+      , section === "coach" && canCoach && tab === "teamsettings" && (
+        React.createElement('div', null
+          , React.createElement('button', { className: "back-to-profile-btn", onClick: () => setTab(""),}, "← Back to Coach HQ"    )
+          , React.createElement('div', { className: "field-label coach-section-label", style: { marginTop: 14 },}, "Team Settings"   )
+          , coachAccentLoaded && (
         React.createElement('div', { className: "card team-colors-card hp-glass"  ,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowTeamColors((s) => !s),}
             , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Team Colors" )
@@ -8763,9 +8784,9 @@ function App() {
             )
           )
         )
-      )
-
-      , section === "coach" && canCoach && tab === "" && !myBagOpen && (
+      
+          )
+          , (
         React.createElement('div', { className: "card team-colors-card" ,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowTeamCoaches((s) => !s),}
             , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Team Coaches" )
@@ -8806,9 +8827,9 @@ function App() {
             );
           })()
         )
-      )
-
-      , section === "coach" && canCoach && tab === "" && !myBagOpen && (
+      
+          )
+          , (
         React.createElement('div', { className: "card team-colors-card", ref: joinRequestsRef,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowJoinRequests((s) => !s),}
             , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Join Requests" , pendingJoinRequests.length > 0 ? ` (${pendingJoinRequests.length})` : "")
@@ -8842,7 +8863,11 @@ function App() {
             );
           })()
         )
+      
+          )
+        )
       )
+
 
 
       , section === "coach" && !canCoach && (
