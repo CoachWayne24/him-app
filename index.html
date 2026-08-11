@@ -5799,6 +5799,12 @@ function App() {
 
   const [showJoinRequests, setShowJoinRequests] = useState(false);
   const joinRequestsRef = useRef(null);
+  // Bumped only by the Huddle "Join Requests" action (see huddleItems below).
+  // A dedicated counter, rather than reusing showJoinRequests, so the scroll
+  // fires every time the action is taken — including when Join Requests was
+  // already expanded, when a plain showJoinRequests-keyed effect would not
+  // re-fire because the boolean value wouldn't actually change.
+  const [joinRequestsScrollTrigger, setJoinRequestsScrollTrigger] = useState(0);
   const [pendingJoinRequests, setPendingJoinRequests] = useState([]);
   const [coachHqStats, setCoachHqStats] = useState({ loaded: false, activePlayers: 0, nextPractice: null, teamMessages: 0, pendingRequests: 0 });
   const [coachToolStats, setCoachToolStats] = useState({ loaded: false, savedPlays: 0, gamesLogged: 0, wins: 0, losses: 0, notes: 0, brackets: 0 });
@@ -5815,14 +5821,23 @@ function App() {
   };
   useEffect(() => {
     if (!showJoinRequests || !supabaseReady || !gSession) return;
-    // Huddle "Join Requests" action opens this same disclosure and relies on
-    // this effect to both load the data and scroll it into view.
+    // Normal manual expand/collapse path (toggle button inside Team Settings).
+    // Loads data whenever the disclosure transitions to open, and scrolls it
+    // into view — unchanged from before.
     _optionalChain([joinRequestsRef, 'access', _r0 => _r0.current, 'optionalAccess', _r1 => _r1.scrollIntoView, 'call', _r2 => _r2({ behavior: "smooth" })]);
     const coachTeams = myTeams.filter((t) => t.role === "coach");
     if (coachTeams.length === 0) return;
     const activeId = coachTeams.some((t) => t.id === activeCoachTeamId) ? activeCoachTeamId : coachTeams[0].id;
     loadJoinRequests(activeId);
   }, [showJoinRequests, activeCoachTeamId, myTeams, gSession]);
+  useEffect(() => {
+    // Huddle-initiated scroll only. Fires on every increment of the trigger,
+    // regardless of whether showJoinRequests actually changed value above —
+    // covers the case where Join Requests was already expanded when the
+    // Huddle item is tapped again.
+    if (!joinRequestsScrollTrigger) return;
+    _optionalChain([joinRequestsRef, 'access', _r6 => _r6.current, 'optionalAccess', _r7 => _r7.scrollIntoView, 'call', _r8 => _r8({ behavior: "smooth" })]);
+  }, [joinRequestsScrollTrigger]);
   const approveJoinRequest = async (requestId) => {
     try {
       await sb.rpc("approve_join_request", { _request_id: requestId });
@@ -8576,7 +8591,7 @@ function App() {
                     if (coachHqStats.loaded && coachHqStats.pendingRequests > 0) {
                       huddleItems.push({
                         key: "join-requests",
-                        onClick: () => { setTab("teamsettings"); setShowJoinRequests(true); },
+                        onClick: () => { setTab("teamsettings"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },
                         icon: "fa-user-plus",
                         label: `${coachHqStats.pendingRequests} Join Request${coachHqStats.pendingRequests === 1 ? "" : "s"} Waiting`,
                         detail: "Review players requesting access",
