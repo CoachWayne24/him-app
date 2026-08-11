@@ -5798,6 +5798,7 @@ function App() {
   };
 
   const [showJoinRequests, setShowJoinRequests] = useState(false);
+  const joinRequestsRef = useRef(null);
   const [pendingJoinRequests, setPendingJoinRequests] = useState([]);
   const [coachHqStats, setCoachHqStats] = useState({ loaded: false, activePlayers: 0, nextPractice: null, teamMessages: 0, pendingRequests: 0 });
   const [coachToolStats, setCoachToolStats] = useState({ loaded: false, savedPlays: 0, gamesLogged: 0, wins: 0, losses: 0, notes: 0, brackets: 0 });
@@ -5814,6 +5815,9 @@ function App() {
   };
   useEffect(() => {
     if (!showJoinRequests || !supabaseReady || !gSession) return;
+    // Huddle "Join Requests" action opens this same disclosure and relies on
+    // this effect to both load the data and scroll it into view.
+    _optionalChain([joinRequestsRef, 'access', _r0 => _r0.current, 'optionalAccess', _r1 => _r1.scrollIntoView, 'call', _r2 => _r2({ behavior: "smooth" })]);
     const coachTeams = myTeams.filter((t) => t.role === "coach");
     if (coachTeams.length === 0) return;
     const activeId = coachTeams.some((t) => t.id === activeCoachTeamId) ? activeCoachTeamId : coachTeams[0].id;
@@ -5870,7 +5874,7 @@ function App() {
           sb.from("games").select("team_score, opponent_score").eq("team_id", activeCoachTeamId).not("team_score", "is", null).not("opponent_score", "is", null),
           sb.from("practice_notes").select("id", { count: "exact", head: true }).eq("team_id", activeCoachTeamId),
           sb.from("brackets").select("id", { count: "exact", head: true }).eq("team_id", activeCoachTeamId),
-          sb.from("team_events").select("title, start_time").eq("team_id", activeCoachTeamId).gte("start_time", todayStart.toISOString()).lte("start_time", todayEnd.toISOString()).order("start_time").limit(1),
+          sb.from("team_events").select("id, title, start_time, location").eq("team_id", activeCoachTeamId).gte("start_time", todayStart.toISOString()).lte("start_time", todayEnd.toISOString()).order("start_time").limit(1),
           sb.from("team_events").select("id, title, start_time").eq("team_id", activeCoachTeamId).gte("start_time", new Date().toISOString()).order("start_time").limit(5),
           sb.from("practice_notes").select("notes, day_label, created_at").eq("team_id", activeCoachTeamId).order("created_at", { ascending: false }).limit(3),
           sb.from("team_plays").select("name, created_at").eq("team_id", activeCoachTeamId).order("created_at", { ascending: false }).limit(3),
@@ -5905,21 +5909,21 @@ function App() {
         // Huddle — unread messages signal. Real unread state via channel_reads,
         // never a stand-in for the existing Messages/7d volume metric. A channel
         // with no read-state row yet (never opened under the new tracking) is
-        // treated as 0 unread rather than "everything unread" — see report.
+        // treated as never-read — every message not sent by the coach counts —
+        // rather than being excluded from the computation entirely.
         let huddleUnread = null;
         if (chanIds.length) {
           const { data: readRows } = await sb.from("channel_reads").select("channel_id, last_read_at").eq("user_id", gSession.user.id).in("channel_id", chanIds);
           const readMap = Object.fromEntries((readRows || []).map((r) => [r.channel_id, r.last_read_at]));
-          const trackedChanIds = Object.keys(readMap);
-          if (trackedChanIds.length) {
-            const oldestRead = trackedChanIds.reduce((min, id) => (readMap[id] < min ? readMap[id] : min), readMap[trackedChanIds[0]]);
-            const { data: unreadCandidates } = await sb.from("messages").select("channel_id, sender_id, created_at").in("channel_id", trackedChanIds).neq("sender_id", gSession.user.id).gt("created_at", oldestRead);
-            const unreadMsgs = (unreadCandidates || []).filter((m) => m.created_at > readMap[m.channel_id]);
-            if (unreadMsgs.length) {
-              const chanNameById2 = Object.fromEntries((chanRes.data || []).map((c) => [c.id, c.name]));
-              const distinctChans = [...new Set(unreadMsgs.map((m) => m.channel_id))];
-              huddleUnread = { count: unreadMsgs.length, channelName: distinctChans.length === 1 ? chanNameById2[distinctChans[0]] : null };
-            }
+          const { data: unreadCandidates } = await sb.from("messages").select("channel_id, sender_id, created_at").in("channel_id", chanIds).neq("sender_id", gSession.user.id);
+          const unreadMsgs = (unreadCandidates || []).filter((m) => {
+            const lastRead = readMap[m.channel_id];
+            return lastRead ? m.created_at > lastRead : true;
+          });
+          if (unreadMsgs.length) {
+            const chanNameById2 = Object.fromEntries((chanRes.data || []).map((c) => [c.id, c.name]));
+            const distinctChans = [...new Set(unreadMsgs.map((m) => m.channel_id))];
+            huddleUnread = { count: unreadMsgs.length, channelName: distinctChans.length === 1 ? chanNameById2[distinctChans[0]] : null };
           }
         }
 
@@ -8452,9 +8456,6 @@ function App() {
       , section === "coach" && canCoach && tab === "" && React.createElement(PremiumAmbient, { noGrid: true,} )
 
       , section === "coach" && canCoach && tab === "" && !myBagOpen && coachTabOrderLoaded && (() => {
-        const items = coachTabOrder && coachTabOrder.length
-          ? coachTabOrder.map((id) => COACH_HUB_ITEMS.find((i) => i.id === id)).filter(Boolean)
-          : COACH_HUB_ITEMS;
         return (
           React.createElement(React.Fragment, null
             , React.createElement('div', { className: "coach-hq",}
@@ -8527,43 +8528,20 @@ function App() {
 
             , myTeams.some((t) => t.role === "coach") && (
               React.createElement(React.Fragment, null
-                , React.createElement('div', { className: "quick-actions-row",}
-                  , React.createElement('button', { className: "quick-action-btn", onClick: () => setTab("builder"),}
-                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-basketball",} )), React.createElement('span', null, "Start Practice" )
-                  )
-                  , React.createElement('button', { className: "quick-action-btn", onClick: () => setTab("library"),}
-                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-plus",} )), React.createElement('span', null, "Add Drill" )
-                  )
-                  , React.createElement('button', { className: "quick-action-btn", onClick: () => setTab("builder"),}
-                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-calendar-days",} )), React.createElement('span', null, "Schedule Event" )
-                  )
-                  , React.createElement('button', { className: "quick-action-btn", onClick: () => goSection("groups", "groups"),}
-                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-bullhorn",} )), React.createElement('span', null, "Send Announcement" )
-                  )
-                )
-
-                , React.createElement('button', { className: "my-bag-artwork-entry", onClick: () => setMyBagOpen(true), "aria-label": "Open My Bag — all coaching tools",}
-                  , React.createElement('img', { className: "my-bag-artwork-img", src: "./my-bag-artwork-v2.png", alt: "My Bag — your coaching tools",} )
-                )
-
-                , React.createElement('div', { className: "card mission-card", style: { maxWidth: 460, margin: "18px auto 0" },}
+                , React.createElement('div', { className: "card mission-card", style: { maxWidth: 460, margin: "18px auto 0", cursor: "pointer" }, onClick: () => setTab("builder"),}
                   , React.createElement('div', { className: "mission-title",}, "Today's Practice" )
                   , !coachDashboard.loaded ? React.createElement('div', { className: "lock-note",}, "Loading…") : coachDashboard.todayPractice ? (
-                    React.createElement('div', { className: "mission-body",}, coachDashboard.todayPractice.title || "Practice", " · "  , new Date(coachDashboard.todayPractice.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))
-                  ) : React.createElement('div', { className: "mission-body",}, "Nothing scheduled today."  )
+                    React.createElement('div', { className: "mission-body",}, coachDashboard.todayPractice.title || "Practice", " · "  , new Date(coachDashboard.todayPractice.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), coachDashboard.todayPractice.location ? ` · ${coachDashboard.todayPractice.location}` : "")
+                  ) : (
+                    React.createElement(React.Fragment, null
+                      , React.createElement('div', { className: "mission-body",}, "Nothing scheduled today."  )
+                      , React.createElement('div', { className: "mission-body", style: { marginTop: 6, fontWeight: 600, color: "var(--vg-highlight)" },}, "Schedule Practice ›" )
+                    )
+                  )
                 )
 
                 , (() => {
                     const huddleItems = [];
-                    (coachDashboard.attentionPlayers || []).slice(0, 3).forEach((p) => {
-                      huddleItems.push({
-                        key: `player-${p.name}`,
-                        onClick: () => setTab("rotations"),
-                        icon: "fa-user-clock",
-                        label: p.name,
-                        detail: p.lastSynced ? `last synced ${new Date(p.lastSynced).toLocaleDateString([], { month: "short", day: "numeric" })}` : "never synced",
-                      });
-                    });
                     if (coachDashboard.huddleSchedule) {
                       const { event: hEvent, notResponded, noCount } = coachDashboard.huddleSchedule;
                       const isToday = new Date(hEvent.start_time).toDateString() === new Date().toDateString();
@@ -8578,6 +8556,15 @@ function App() {
                         detail,
                       });
                     }
+                    if (coachHqStats.loaded && coachHqStats.pendingRequests > 0) {
+                      huddleItems.push({
+                        key: "join-requests",
+                        onClick: () => setShowJoinRequests(true),
+                        icon: "fa-user-plus",
+                        label: `${coachHqStats.pendingRequests} Join Request${coachHqStats.pendingRequests === 1 ? "" : "s"} Waiting`,
+                        detail: "Review players requesting access",
+                      });
+                    }
                     if (coachDashboard.huddleUnread) {
                       const { count: unreadCount, channelName } = coachDashboard.huddleUnread;
                       huddleItems.push({
@@ -8588,6 +8575,15 @@ function App() {
                         detail: "Tap to open Team Chat",
                       });
                     }
+                    (coachDashboard.attentionPlayers || []).slice(0, 3).forEach((p) => {
+                      huddleItems.push({
+                        key: `player-${p.name}`,
+                        onClick: () => setTab("rotations"),
+                        icon: "fa-user-clock",
+                        label: p.name,
+                        detail: p.lastSynced ? `last synced ${new Date(p.lastSynced).toLocaleDateString([], { month: "short", day: "numeric" })}` : "never synced",
+                      });
+                    });
                     return React.createElement('div', { className: "card huddle-card", style: { maxWidth: 460, margin: "14px auto 0" },}
                       , React.createElement('div', { className: "huddle-header",}
                         , React.createElement('span', { className: "huddle-title",}, "The Huddle" )
@@ -8612,31 +8608,27 @@ function App() {
                       )
                     );
                   })()
-              )
-            )
 
-            , coachPinnedLoaded && (() => {
-              const pinnedItems = coachPinnedTools && coachPinnedTools.length
-                ? coachPinnedTools.map((id) => COACH_HUB_ITEMS.find((i) => i.id === id)).filter(Boolean)
-                : items.slice(0, 4);
-              return (
-                React.createElement(React.Fragment, null
-                  , React.createElement('div', { className: "field-label coach-section-label",}, "Coach Tools" )
-                  , React.createElement('div', { className: "coach-card-list", style: { marginBottom: 14 },}
-                    , pinnedItems.map((it) => (
-                      React.createElement('div', { key: `pinned-${it.id}`, className: "coach-tool-card", onClick: () => setTab(it.id),}
-                        , React.createElement('span', { className: "ctc-icon",}, React.createElement('i', { className: `fa-solid fa-${it.faIcon} ctc-icon-glyph`,} ))
-                        , React.createElement('span', { className: "ctc-text",}
-                          , React.createElement('span', { className: "ctc-title",}, it.label)
-                          , React.createElement('span', { className: "ctc-sub",}, it.sub)
-                        )
-                        , React.createElement('span', { className: "ctc-arrow",}, "›")
-                      )
-                    ))
+                , React.createElement('div', { className: "quick-actions-row",}
+                  , React.createElement('button', { className: "quick-action-btn", onClick: () => setTab("builder"),}
+                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-basketball",} )), React.createElement('span', null, "Start Practice" )
+                  )
+                  , React.createElement('button', { className: "quick-action-btn", onClick: () => setTab("library"),}
+                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-plus",} )), React.createElement('span', null, "Add Drill" )
+                  )
+                  , React.createElement('button', { className: "quick-action-btn", onClick: () => setTab("builder"),}
+                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-calendar-days",} )), React.createElement('span', null, "Schedule Event" )
+                  )
+                  , React.createElement('button', { className: "quick-action-btn", onClick: () => goSection("groups", "groups"),}
+                    , React.createElement('span', { className: "quick-action-icon",}, React.createElement('i', { className: "fa-solid fa-bullhorn",} )), React.createElement('span', null, "Send Announcement" )
                   )
                 )
-              );
-            })()
+
+                , React.createElement('button', { className: "my-bag-artwork-entry", onClick: () => setMyBagOpen(true), "aria-label": "Open My Bag — all coaching tools",}
+                  , React.createElement('img', { className: "my-bag-artwork-img", src: "./my-bag-artwork-v2.png", alt: "My Bag — your coaching tools",} )
+                )
+              )
+            )
           )
         );
       })()
@@ -8817,7 +8809,7 @@ function App() {
       )
 
       , section === "coach" && canCoach && tab === "" && !myBagOpen && (
-        React.createElement('div', { className: "card team-colors-card" ,}
+        React.createElement('div', { className: "card team-colors-card", ref: joinRequestsRef,}
           , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowJoinRequests((s) => !s),}
             , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Join Requests" , pendingJoinRequests.length > 0 ? ` (${pendingJoinRequests.length})` : "")
             , React.createElement('span', { className: "team-colors-chevron",}, showJoinRequests ? "▾" : "▸")
