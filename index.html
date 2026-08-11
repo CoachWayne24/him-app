@@ -6912,19 +6912,30 @@ function App() {
           background-image:
             linear-gradient(to bottom,
               rgba(0,0,0,0) 0px,
-              rgba(0,0,0,0) 520px,
-              rgba(0,0,0,0.08) 560px,
-              rgba(0,0,0,0.22) 600px,
-              rgba(0,0,0,0.42) 640px,
-              rgba(0,0,0,0.62) 670px,
-              rgba(0,0,0,0.80) 695px,
-              rgba(0,0,0,0.94) 712px,
-              rgba(0,0,0,1) 722px,
+              rgba(0,0,0,0) 650px,
+              rgba(0,0,0,0.08) 690px,
+              rgba(0,0,0,0.22) 730px,
+              rgba(0,0,0,0.42) 770px,
+              rgba(0,0,0,0.62) 800px,
+              rgba(0,0,0,0.80) 825px,
+              rgba(0,0,0,0.94) 840px,
+              rgba(0,0,0,1) 850px,
               rgba(0,0,0,1) 100%
             ),
-            url("./coach-hq-blacktop.png");
-          background-repeat: no-repeat, repeat;
-          background-position: top left, top left;
+            linear-gradient(to bottom,
+              rgba(255,255,255,0) 0px,
+              rgba(255,255,255,0.0057) 42px,
+              rgba(255,255,255,0) 140px,
+              rgba(0,0,0,0) 220px,
+              rgba(0,0,0,0.090) 320px,
+              rgba(0,0,0,0.090) 340px,
+              rgba(0,0,0,0) 380px,
+              rgba(0,0,0,0) 100%
+            ),
+            url("./coach-hq-blacktop-v3.png");
+          background-repeat: no-repeat, no-repeat, repeat;
+          background-position: top left, top left, top left;
+          background-size: 100% 100%, 100% 100%, 412.6px 74.8px;
         }
         .role-coach .card { background: #1B1F23; border: 1px solid #2E3438; border-radius: 8px; }
         .role-coach .card, .role-coach .day-col, .role-coach .palette-item, .role-coach .lib-row { border-style: dashed; }
@@ -7926,8 +7937,8 @@ function App() {
         .coach-hq { text-align: center; padding: 18px 16px 4px; position: relative; z-index: 2; }
         .my-bag-screen { min-height: 100vh; text-align: left; }
         .my-bag-screen .back-to-profile-btn { text-align: left; }
-        .coach-hq-emblem { display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
-        .coach-hq-mark-img { width: 216px; height: auto; object-fit: contain; display: block; }
+        .coach-hq-emblem { display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; overflow: hidden; width: 100%; position: relative; }
+        .coach-hq-mark-img { width: 418px; height: auto; object-fit: contain; display: block; }
         @keyframes coach-hq-pulse { 0%, 100% { box-shadow: 0 0 20px rgba(217,174,63,0.26), 0 0 42px rgba(217,174,63,0.1), inset 0 1px 0 rgba(255,255,255,0.06); } 50% { box-shadow: 0 0 28px rgba(217,174,63,0.4), 0 0 56px rgba(217,174,63,0.18), inset 0 1px 0 rgba(255,255,255,0.08); } }
         .coach-hq-title { font-family: 'Anton', sans-serif; font-size: clamp(24px, 5vh, 34px); letter-spacing: 0.08em; text-transform: uppercase;
           background: linear-gradient(120deg, var(--vg-highlight), var(--vg-primary) 55%, var(--vg-muted));
