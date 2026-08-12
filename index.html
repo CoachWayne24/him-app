@@ -8529,6 +8529,7 @@ function App() {
                     React.createElement(React.Fragment, null
                       , coachTeams.length > 0 && (
                         React.createElement('div', { className: "profile-switch-dropdown-wrap", style: { marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 },}
+                          , React.createElement('span', { "aria-hidden": "true", style: { display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: coachTeamTheme.accent, border: "1px solid rgba(255,255,255,0.14)", flexShrink: 0 },} )
                           , React.createElement('select', { className: "profile-switch-dropdown coach-hq-select" , value: activeId || "", onChange: (e) => setActiveCoachTeamId(e.target.value),}
                             , coachTeams.map((t) => React.createElement('option', { key: t.id, value: t.id,}, t.name))
                           )
