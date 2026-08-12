@@ -5926,14 +5926,26 @@ function App() {
         // with no read-state row yet (never opened under the new tracking) is
         // treated as never-read — every message not sent by the coach counts —
         // rather than being excluded from the computation entirely.
+        //
+        // Bounded to a 60-day window so this can't scan a team's full message
+        // history (that was the likely cause of Coach HQ hanging on load).
+        // The DB-level floor is the EARLIER of "60 days ago" or the oldest
+        // tracked channel's last_read_at, so a tracked channel that hasn't
+        // been opened in longer than 60 days still gets its real unread
+        // messages fetched — only the untracked (never-read) case is capped
+        // to the last 60 days, per the never-read definition below.
         let huddleUnread = null;
         if (chanIds.length) {
           const { data: readRows } = await sb.from("channel_reads").select("channel_id, last_read_at").eq("user_id", gSession.user.id).in("channel_id", chanIds);
           const readMap = Object.fromEntries((readRows || []).map((r) => [r.channel_id, r.last_read_at]));
-          const { data: unreadCandidates } = await sb.from("messages").select("channel_id, sender_id, created_at").in("channel_id", chanIds).neq("sender_id", gSession.user.id);
+          const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+          const trackedTimestamps = Object.values(readMap).filter(Boolean);
+          const earliestTracked = trackedTimestamps.length ? trackedTimestamps.reduce((min, t) => (t < min ? t : min)) : null;
+          const queryFloor = earliestTracked && earliestTracked < sixtyDaysAgo ? earliestTracked : sixtyDaysAgo;
+          const { data: unreadCandidates } = await sb.from("messages").select("channel_id, sender_id, created_at").in("channel_id", chanIds).neq("sender_id", gSession.user.id).gte("created_at", queryFloor);
           const unreadMsgs = (unreadCandidates || []).filter((m) => {
             const lastRead = readMap[m.channel_id];
-            return lastRead ? m.created_at > lastRead : true;
+            return lastRead ? m.created_at > lastRead : m.created_at > sixtyDaysAgo;
           });
           if (unreadMsgs.length) {
             const chanNameById2 = Object.fromEntries((chanRes.data || []).map((c) => [c.id, c.name]));
