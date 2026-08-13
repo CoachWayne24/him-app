@@ -5896,6 +5896,10 @@ function App() {
       const rows = (data || []).filter((r) => r.team).map((r) => ({ id: r.team.id, name: r.team.name, role: r.role, themeKey: r.team.theme_key || "gold" }));
       setMyTeams(rows);
       setIsTeamCoach(rows.some((r) => r.role === "coach"));
+      if (!activeCoachTeamId) {
+        const firstCoachTeam = rows.find((r) => r.role === "coach");
+        if (firstCoachTeam) setActiveCoachTeamId(firstCoachTeam.id);
+      }
       setCoachCheckDone(true);
     })();
   }, [gSession]);
