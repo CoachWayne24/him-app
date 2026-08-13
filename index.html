@@ -7021,7 +7021,7 @@ function App() {
         .coach-hq-view .team-colors-chevron { color: var(--vg-primary); }
         .home-colors-card { max-width: 320px; margin: 16px auto 0; text-align: left; }
         .team-color-swatch-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-        .team-color-swatch { display: flex; border-radius: 8px; overflow: hidden; width: 40px; height: 32px; border: 2px solid #2E3438; cursor: pointer; padding: 0; }
+        .team-color-swatch { display: flex; box-sizing: border-box; background: transparent; border-radius: 8px; overflow: hidden; width: 44px; height: 44px; padding: 6px 2px; border: 2px solid #2E3438; cursor: pointer; touch-action: manipulation; }
         .team-color-swatch.active { border-color: var(--accent); }
         .team-color-swatch span { flex: 1; display: block; }
         .team-color-custom-row input[type="color"] { width: 44px; height: 34px; border: 1px solid #2E3438; border-radius: 8px; background: transparent; cursor: pointer; padding: 2px; }
