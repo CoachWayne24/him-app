@@ -1505,7 +1505,7 @@ const HOME_THEME = { accent: "#D9AE3F", accentSoft: "#A9812E" }; // original bra
 // this is not a placeholder bug — Vision Mark swapping is sequenced to land
 // only once the six additional color variants exist and are approved.
 const TEAM_THEMES = {
-  gold:      { label: "HIM Gold",   accent: "#D9AE3F", accentSoft: "#A9812E", markAsset: "./vision-mark-v3-final-TEST.png" },
+  gold:      { label: "HIM Gold",   accent: "#D9AE3F", accentSoft: "#A9812E", markAsset: "./vision-mark-v3-final.png" },
   red:       { label: "Red",        accent: "#C8342E", accentSoft: "#8F211D", markAsset: "./vision-mark-v3-red.png" },
   royalblue: { label: "Royal Blue", accent: "#2E5FC8", accentSoft: "#1D3E8F", markAsset: "./vision-mark-v3-royalblue.png" },
   navy:      { label: "Navy",       accent: "#1B2A4A", accentSoft: "#3A4A72", markAsset: "./vision-mark-v3-navy.png" },
@@ -5830,6 +5830,9 @@ function App() {
   };
 
   const [showJoinRequests, setShowJoinRequests] = useState(false);
+  const [showCoachAdminMenu, setShowCoachAdminMenu] = useState(false);
+  const [showTeamColorPopover, setShowTeamColorPopover] = useState(false);
+  const [showTeamInfoPopover, setShowTeamInfoPopover] = useState(false);
   const joinRequestsRef = useRef(null);
   // Bumped only by the Huddle "Join Requests" action (see huddleItems below).
   // A dedicated counter, rather than reusing showJoinRequests, so the scroll
@@ -8011,7 +8014,7 @@ function App() {
         .coach-hq-title { font-family: 'Anton', sans-serif; font-size: clamp(24px, 5vh, 34px); letter-spacing: 0.08em; text-transform: uppercase;
           background: linear-gradient(120deg, var(--vg-highlight), var(--vg-primary) 55%, var(--vg-muted));
           -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 18px; }
-        .coach-hq-card { max-width: 460px; margin: 0 auto; background: linear-gradient(165deg, rgba(22,22,24,0.82), rgba(10,10,11,0.9));
+        .coach-hq-card { max-width: 460px; margin: 0 auto; position: relative; background: linear-gradient(165deg, rgba(22,22,24,0.82), rgba(10,10,11,0.9));
           backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
           border: 1px solid color-mix(in srgb, var(--vg-primary) 30%, transparent); border-radius: 20px; padding: 20px 19px 19px;
           box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 30px rgba(217,174,63,0.08), inset 0 1px 0 rgba(255,255,255,0.05); text-align: center; }
@@ -8092,11 +8095,11 @@ function App() {
           -webkit-background-clip: text; background-clip: text; color: transparent; }
         .rank-legend .tier-card-quote { font-size: 13.5px; padding-top: 16px; }
         .rank-legend .tier-card-stat-row { background: rgba(0,0,0,0.3); border: 1px solid rgba(179,136,255,0.12); }
-        .quick-action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: linear-gradient(160deg, color-mix(in srgb, var(--vg-primary, #D9AE3F) 16%, transparent), color-mix(in srgb, var(--vg-muted, #D9AE3F) 12%, transparent));
-          border: 1px solid rgba(217,174,63,0.3); border-radius: 16px; padding: 16px 8px; cursor: pointer;
+        .quick-action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: linear-gradient(165deg, rgba(20,19,17,0.92), rgba(10,10,10,0.96));
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px 8px; cursor: pointer;
           font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: #F1EDE4; text-align: center;
           transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease; }
-        .quick-action-btn:hover { border-color: var(--accent); box-shadow: 0 0 18px rgba(217,174,63,0.22); }
+        .quick-action-btn:hover { border-color: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,0.08)); box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 16%, transparent); }
         .quick-action-btn:active { transform: scale(0.96); }
         .quick-action-icon { font-size: 20px; background: linear-gradient(160deg, #FFFFFF 0%, var(--vg-accent-safe, var(--accent)) 45%, var(--vg-primary, var(--accent-soft)) 100%);
           -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4)); }
@@ -8530,6 +8533,17 @@ function App() {
               , React.createElement('div', { className: "coach-hq-title",}, "Coach HQ" )
 
               , React.createElement('div', { className: "coach-hq-card",}
+                , React.createElement('button', { className: "hamburger-menu-btn", style: { position: "absolute", top: 14, right: 14, transform: "none" }, onClick: () => setShowCoachAdminMenu((s) => !s), "aria-label": "Team menu",}
+                  , React.createElement('span', null ), React.createElement('span', null ), React.createElement('span', null )
+                )
+                , showCoachAdminMenu && (
+                  React.createElement('div', { className: "profile-settings-menu", style: { position: "absolute", top: 50, right: 14, zIndex: 20, maxWidth: 190, margin: 0 },}
+                    , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowTeamCoaches(true); },}, "Team Coaches")
+                    , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },}, "Join Requests")
+                    , React.createElement('button', { className: "profile-settings-item", disabled: true, title: "Coming soon", style: { opacity: 0.4, cursor: "default" },}, "Delete Team")
+                    , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); sb.auth.signOut(); },}, "Sign Out")
+                  )
+                )
                 , (() => {
                   const coachTeams = myTeams.filter((t) => t.role === "coach");
                   const activeId = coachTeams.some((t) => t.id === activeCoachTeamId) ? activeCoachTeamId : (coachTeams[0] && coachTeams[0].id);
@@ -8541,10 +8555,28 @@ function App() {
                           , React.createElement('select', { className: "profile-switch-dropdown coach-hq-select" , value: activeId || "", onChange: (e) => setActiveCoachTeamId(e.target.value),}
                             , coachTeams.map((t) => React.createElement('option', { key: t.id, value: t.id,}, t.name))
                           )
-                          , React.createElement('button', { onClick: () => setTab("teamsettings"), "aria-label": "Team Settings", style: { background: "none", border: "none", color: "#9C9280", fontSize: 15, cursor: "pointer", padding: 4, lineHeight: 1, opacity: 0.75 },}
-                            , React.createElement('i', { className: "fa-solid fa-gear",} )
+                          , React.createElement('button', { onClick: () => { setShowTeamColorPopover((s) => !s); setShowTeamInfoPopover(false); }, "aria-label": "Team Color", style: { background: "none", border: "none", color: "#9C9280", fontSize: 15, cursor: "pointer", padding: 4, lineHeight: 1, opacity: 0.75 },}
+                            , React.createElement('i', { className: "fa-solid fa-palette",} )
+                          )
+                          , React.createElement('button', { onClick: () => { setShowTeamInfoPopover((s) => !s); setShowTeamColorPopover(false); }, "aria-label": "Team Info", style: { background: "none", border: "none", color: "#9C9280", fontSize: 13, cursor: "pointer", padding: 4, lineHeight: 1, opacity: 0.65 },}
+                            , React.createElement('i', { className: "fa-solid fa-circle-info",} )
                           )
                         )
+                      )
+                      , showTeamColorPopover && (
+                        React.createElement('div', { className: "team-color-swatch-row", style: { justifyContent: "center", marginTop: 8, marginBottom: 8 },}
+                          , Object.keys(TEAM_THEMES).map((key) => {
+                              const t = TEAM_THEMES[key];
+                              const isActive = ((activeCoachTeam && activeCoachTeam.themeKey) || "gold") === key;
+                              return React.createElement('button', { key: key, className: `team-color-swatch ${isActive ? "active" : ""}`, title: t.label, onClick: () => { setTeamTheme(key); setShowTeamColorPopover(false); },}
+                                , React.createElement('span', { style: { background: t.accent },} )
+                                , React.createElement('span', { style: { background: t.accentSoft },} )
+                              );
+                            })
+                        )
+                      )
+                      , showTeamInfoPopover && (
+                        React.createElement('div', { className: "lock-note", style: { marginTop: 8, marginBottom: 8, maxWidth: 320, marginLeft: "auto", marginRight: "auto" },}, "This is your team's name, shared with every coach on Coach HQ. Renaming isn't available yet."  )
                       )
                       , coachTeams.length === 0 && (
                         React.createElement('div', { className: "lock-note", style: { marginBottom: 12, maxWidth: 340, marginLeft: "auto", marginRight: "auto" },}, "You're not attached to a team yet, so Coach HQ is quiet for now. Create a team below, or ask a head coach to add you under Team Coaches — either way, you can start any time."                                     )
