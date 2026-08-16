@@ -7779,7 +7779,7 @@ function App() {
         .pcr-games-played { text-align: center; font-family: 'Space Mono', monospace; font-size: 8.5px; color: #6E7378; padding-bottom: 12px; }
 
         .mission-card { background: linear-gradient(160deg, rgba(217,174,63,0.14), rgba(217,174,63,0.03)); border-color: rgba(217,174,63,0.32); }
-        .coach-hq-view .mission-card { border-color: color-mix(in srgb, var(--vg-primary) 45%, transparent); background: linear-gradient(160deg, color-mix(in srgb, var(--vg-primary) 14%, transparent), color-mix(in srgb, var(--vg-muted) 8%, transparent)); }
+        .coach-hq-view .mission-card { border-color: rgba(255,255,255,0.10); background: linear-gradient(160deg, rgba(20,19,17,0.88), rgba(10,10,10,0.94)); }
         .mission-card.mission-done { background: linear-gradient(160deg, rgba(76,255,76,0.12), rgba(76,255,76,0.02)); border-color: rgba(76,255,76,0.3); }
         .mission-title { font-family: 'Anton', sans-serif; font-size: 19px; text-transform: uppercase; letter-spacing: 0.02em; color: #F5F1E8; margin-bottom: 6px; }
         .mission-body { font-size: 13px; color: #C9C2B4; line-height: 1.5; }
@@ -8108,15 +8108,15 @@ function App() {
         .dash-card-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 460px; margin: 14px auto 0; padding: 0 4px; position: relative; z-index: 2; }
         @media (min-width: 620px) { .dash-card-grid { grid-template-columns: 1fr 1fr; max-width: 700px; } }
         .dash-card-grid .card { padding: 14px 16px; margin-bottom: 0; }
-        .huddle-card { padding: 16px 18px; background: rgba(20,19,16,0.4); border: 1px solid rgba(255,255,255,0.06); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+        .huddle-card { padding: 16px 18px; background: rgba(16,15,13,0.78); border: 1px solid rgba(255,255,255,0.07); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
         .huddle-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .huddle-title { font-family: 'Anton', sans-serif; font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--vg-highlight); }
+        .huddle-title { font-family: 'Anton', sans-serif; font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; color: #F5F1E8; }
         .huddle-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: #9C9280; }
         .huddle-clear { display: flex; align-items: center; gap: 8px; padding: 10px 2px 2px; font-family: 'Space Mono', monospace; font-size: 13px; color: #C7BBA0; }
-        .huddle-clear i { color: var(--vg-primary); font-size: 15px; }
-        .huddle-row { display: flex; align-items: center; gap: 12px; padding: 10px 2px; cursor: pointer; border-top: 1px solid rgba(217,174,63,0.12); }
+        .huddle-clear i { color: var(--accent); font-size: 15px; }
+        .huddle-row { display: flex; align-items: center; gap: 12px; padding: 10px 2px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.08); }
         .huddle-row:first-of-type { border-top: none; }
-        .huddle-row-icon { flex-shrink: 0; width: 20px; text-align: center; font-size: 14px; color: var(--vg-primary); }
+        .huddle-row-icon { flex-shrink: 0; width: 20px; text-align: center; font-size: 14px; color: var(--accent); }
         .huddle-row-text { flex: 1; min-width: 0; }
         .huddle-row-label { font-size: 14px; color: #EDE7D8; font-weight: 600; }
         .huddle-row-detail { font-family: 'Space Mono', monospace; font-size: 11.5px; color: #9C9280; margin-top: 1px; }
@@ -8638,7 +8638,7 @@ function App() {
                   , !coachDashboard.loaded ? React.createElement('div', { className: "lock-note",}, "Loading…") : coachDashboard.todayEvents.length === 0 ? (
                     React.createElement(React.Fragment, null
                       , React.createElement('div', { className: "mission-body",}, "Nothing scheduled today."  )
-                      , React.createElement('div', { className: "mission-body", style: { marginTop: 6, fontWeight: 600, color: "var(--vg-highlight)" },}, "+ Add Event" )
+                      , React.createElement('div', { className: "mission-body", style: { marginTop: 6, fontWeight: 600, color: "var(--accent)" },}, "+ Add Event" )
                     )
                   ) : (
                     React.createElement(React.Fragment, null
@@ -8646,7 +8646,7 @@ function App() {
                           const typeIcon = ev.event_type === "practice" ? "fa-basketball" : ev.event_type === "game" ? "fa-trophy" : "fa-calendar-day";
                           const typeLabel = ev.event_type ? ev.event_type[0].toUpperCase() + ev.event_type.slice(1) : "Event";
                           return React.createElement('div', { key: ev.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "4px 0" },}
-                            , React.createElement('i', { className: `fa-solid ${typeIcon}`, style: { width: 16, textAlign: "center", fontSize: 13, flexShrink: 0, color: "var(--vg-primary)" },} )
+                            , React.createElement('i', { className: `fa-solid ${typeIcon}`, style: { width: 16, textAlign: "center", fontSize: 13, flexShrink: 0, color: "var(--accent)" },} )
                             , React.createElement('span', { className: "mission-body", style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },}, ev.title || typeLabel)
                             , React.createElement('span', { className: "mission-body", style: { flexShrink: 0, opacity: 0.8 },}, new Date(ev.start_time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))
                           );
