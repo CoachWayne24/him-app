@@ -8403,7 +8403,22 @@ function App() {
           , section === "coach" && tab !== "" && (
             React.createElement('button', { className: "back-to-profile-btn", onClick: () => setTab(""),}, "← Back to Coach Tools"    )
           )
-          , isAdmin && React.createElement('span', { className: "admin-badge",}, "ADMIN MODE" )
+          , React.createElement('div', { style: { display: "flex", alignItems: "center", gap: 10 },}
+            , isAdmin && React.createElement('span', { className: "admin-badge",}, "ADMIN MODE" )
+            , section === "coach" && tab === "" && (
+              React.createElement('button', { className: "hamburger-menu-btn hamburger-menu-btn-inline", onClick: () => setShowCoachAdminMenu((s) => !s), "aria-label": "Team menu",}
+                , React.createElement('span', null ), React.createElement('span', null ), React.createElement('span', null )
+              )
+            )
+          )
+        )
+      )
+      , showCoachAdminMenu && section === "coach" && tab === "" && (
+        React.createElement('div', { className: "profile-settings-menu",}
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowTeamCoaches(true); },}, "Team Coaches")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },}, "Join Requests")
+          , React.createElement('button', { className: "profile-settings-item", disabled: true, title: "Coming soon", style: { opacity: 0.4, cursor: "default" },}, "Delete Team")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); sb.auth.signOut(); },}, "Sign Out")
         )
       )
       , section === "home" && (
@@ -8533,17 +8548,6 @@ function App() {
               , React.createElement('div', { className: "coach-hq-title",}, "Coach HQ" )
 
               , React.createElement('div', { className: "coach-hq-card",}
-                , React.createElement('button', { className: "hamburger-menu-btn", style: { position: "absolute", top: 14, right: 14, transform: "none" }, onClick: () => setShowCoachAdminMenu((s) => !s), "aria-label": "Team menu",}
-                  , React.createElement('span', null ), React.createElement('span', null ), React.createElement('span', null )
-                )
-                , showCoachAdminMenu && (
-                  React.createElement('div', { className: "profile-settings-menu", style: { position: "absolute", top: 50, right: 14, zIndex: 20, maxWidth: 190, margin: 0 },}
-                    , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowTeamCoaches(true); },}, "Team Coaches")
-                    , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },}, "Join Requests")
-                    , React.createElement('button', { className: "profile-settings-item", disabled: true, title: "Coming soon", style: { opacity: 0.4, cursor: "default" },}, "Delete Team")
-                    , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); sb.auth.signOut(); },}, "Sign Out")
-                  )
-                )
                 , (() => {
                   const coachTeams = myTeams.filter((t) => t.role === "coach");
                   const activeId = coachTeams.some((t) => t.id === activeCoachTeamId) ? activeCoachTeamId : (coachTeams[0] && coachTeams[0].id);
