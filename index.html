@@ -6954,19 +6954,20 @@ function App() {
         .radar-tilt-btn:active { transform: scale(0.95); }
         .scoreboard-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #8F8368; margin-top: 2px; }
 
-        /* ---------- COACH THEME: whiteboard / clipboard ---------- */
+        /* Coach inner-page foundation: same approved blacktop texture as the Coach HQ
+           landing page, without the landing page's Vision-Mark-aligned fade/tonal
+           gradients (nothing on inner pages needs to align with those). This replaces
+           the old whiteboard/clipboard grid that previously rendered on every coach
+           tool page other than the landing screen. The more specific
+           .role-coach.app.coach-hq-view rule below continues to fully override this
+           on the landing page itself, unchanged. */
         .role-coach.app {
-          background-color: #14171A;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
-            radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 55%);
-          background-size: 26px 26px, 26px 26px, auto;
+          background-color: #0a0908;
+          background-image: url("./coach-hq-blacktop-v3.png");
+          background-repeat: repeat;
+          background-position: top left;
+          background-size: 412.6px 74.8px;
         }
-        /* Coach HQ landing screen only — permanent blacktop environment per the locked
-           direction, no grid. The other 12 coach tools keep the whiteboard/clipboard grid
-           above, untouched. This is the actual root of the grid the earlier hp-carbon
-           changes never reached, since this sits on .app itself, underneath everything else. */
         /* ================================================================
            VISION GOLD SYSTEM — sampled directly from the actual approved
            Vision Mark asset (median RGB of pixels classified by brightness
@@ -8012,7 +8013,7 @@ function App() {
         .coach-hq-mark-img { width: 418px; height: auto; object-fit: contain; display: block; }
         @keyframes coach-hq-pulse { 0%, 100% { box-shadow: 0 0 20px rgba(217,174,63,0.26), 0 0 42px rgba(217,174,63,0.1), inset 0 1px 0 rgba(255,255,255,0.06); } 50% { box-shadow: 0 0 28px rgba(217,174,63,0.4), 0 0 56px rgba(217,174,63,0.18), inset 0 1px 0 rgba(255,255,255,0.08); } }
         .coach-hq-title { font-family: 'Anton', sans-serif; font-size: clamp(24px, 5vh, 34px); letter-spacing: 0.08em; text-transform: uppercase;
-          background: linear-gradient(120deg, var(--vg-highlight), var(--vg-primary) 55%, var(--vg-muted));
+          background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 60%, white 40%), color-mix(in srgb, var(--accent) 75%, white 25%) 55%, var(--accent-soft));
           -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 18px; }
         .coach-hq-card { max-width: 460px; margin: 0 auto; position: relative; background: linear-gradient(165deg, rgba(22,22,24,0.82), rgba(10,10,11,0.9));
           backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -8030,7 +8031,7 @@ function App() {
            restrained Vision Mark-derived corner signature. Scoped via .coach-hq-view
            so nothing else in the app is affected. */
         .coach-hq-view .player-greeting { color: #9C9280; opacity: 1; }
-        .coach-hq-view .admin-badge { background: color-mix(in srgb, var(--vg-primary) 12%, transparent); color: var(--vg-highlight); border: 1px solid color-mix(in srgb, var(--vg-primary) 45%, transparent); font-weight: 600; letter-spacing: 0.04em; }
+        .coach-hq-view .admin-badge { background: rgba(0,0,0,0.35); color: color-mix(in srgb, var(--accent) 75%, white 25%); border: 1px solid color-mix(in srgb, var(--accent) 75%, white 25%); font-weight: 600; letter-spacing: 0.04em; }
         .coach-hq-view .add-player-top-btn { border-color: color-mix(in srgb, var(--vg-primary) 35%, transparent); color: #C7BBA0; letter-spacing: 0.07em; }
         .coach-hq-view .add-player-top-btn:hover { border-color: var(--vg-primary); color: var(--vg-highlight); }
         .coach-hq-view .coach-hq-card {
