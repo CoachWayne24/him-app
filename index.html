@@ -3164,7 +3164,7 @@ function emptyPlanData() {
   return { days };
 }
 
-function TeamScheduleBuilder({ teamId, teamName, userId, library }) {
+function TeamScheduleBuilder({ teamId, teamName, userId, library, markAsset }) {
   const [planData, setPlanData] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -3344,7 +3344,7 @@ function TeamScheduleBuilder({ teamId, teamName, userId, library }) {
         else { hook = `${plannedDays.length} of 7 Days Ready`; sub = `${totalMinutes} minutes planned so far — keep going.`; }
         return (
           React.createElement('div', { className: "athlete-hero", style: { padding: "2px 8px 12px" },}
-            , React.createElement('div', { className: "athlete-hero-emblem",}, React.createElement('img', { className: "hero-mark-img", src: "./vision-mark.png", alt: "HIM.",} ))
+            , React.createElement('div', { className: "athlete-hero-emblem",}, React.createElement('img', { className: "hero-mark-img", src: markAsset, alt: "HIM.",} ))
             , React.createElement('div', { className: "athlete-hero-hook",}, hook)
             , React.createElement('div', { className: "athlete-hero-sub",}, sub)
           )
@@ -9727,7 +9727,7 @@ function App() {
                       , coachTeams.map((t) => React.createElement('button', { key: t.id, className: `chip ${activeId === t.id ? "active" : ""}`, onClick: () => setActiveCoachTeamId(t.id),}, t.name))
                     )
                   )
-                  , React.createElement(TeamScheduleBuilder, { key: activeTeamObj.id, teamId: activeTeamObj.id, teamName: activeTeamObj.name, userId: gSession.user.id, library: library,} )
+                  , React.createElement(TeamScheduleBuilder, { key: activeTeamObj.id, teamId: activeTeamObj.id, teamName: activeTeamObj.name, userId: gSession.user.id, library: library, markAsset: coachTeamTheme.markAsset,} )
                 )
               );
             })()
