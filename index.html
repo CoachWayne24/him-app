@@ -7894,7 +7894,7 @@ function App() {
 
         .ctc-pin-btn { flex-shrink: 0; background: transparent; border: none; padding: 6px; font-size: 13px; color: #4A4437; cursor: pointer; transition: color 0.15s ease, transform 0.12s ease; }
         .ctc-pin-btn:active { transform: scale(0.88); }
-        .coach-hq-view .ctc-pin-btn.pinned { color: var(--vg-primary); }
+        .coach-hq-view .ctc-pin-btn.pinned { color: var(--accent); }
 
         /* Dedicated drag handle — touch-action:none from initial render (not toggled),
            which is the actual fix for iOS Safari: WebKit locks in a touch-action
@@ -8421,8 +8421,8 @@ function App() {
       )
       , showCoachAdminMenu && section === "coach" && tab === "" && (
         React.createElement('div', { className: "profile-settings-menu",}
-          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowTeamCoaches(true); },}, "Team Coaches")
-          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamsettings"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },}, "Join Requests")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("teamcoaches"); setShowTeamCoaches(true); },}, "Team Coaches")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); setTab("joinrequests"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },}, "Join Requests")
           , React.createElement('button', { className: "profile-settings-item", disabled: true, title: "Coming soon", style: { opacity: 0.4, cursor: "default" },}, "Delete Team")
           , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowCoachAdminMenu(false); sb.auth.signOut(); },}, "Sign Out")
         )
@@ -8682,7 +8682,7 @@ function App() {
                     if (coachHqStats.loaded && coachHqStats.pendingRequests > 0) {
                       huddleItems.push({
                         key: "join-requests",
-                        onClick: () => { setTab("teamsettings"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },
+                        onClick: () => { setTab("joinrequests"); setShowJoinRequests(true); setJoinRequestsScrollTrigger((n) => n + 1); },
                         icon: "fa-user-plus",
                         label: `${coachHqStats.pendingRequests} Join Request${coachHqStats.pendingRequests === 1 ? "" : "s"} Waiting`,
                         detail: "Review players requesting access",
@@ -8839,116 +8839,81 @@ function App() {
         );
       })()
 
-      , section === "coach" && canCoach && tab === "teamsettings" && (
+      , section === "coach" && canCoach && tab === "teamcoaches" && (
         React.createElement('div', null
           , React.createElement('button', { className: "back-to-profile-btn", onClick: () => setTab(""),}, "← Back to Coach HQ"    )
-          , React.createElement('div', { className: "field-label coach-section-label", style: { marginTop: 14 },}, "Team Settings"   )
-          , coachAccentLoaded && (
-        React.createElement('div', { className: "card team-colors-card hp-glass"  ,}
-          , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowTeamColors((s) => !s),}
-            , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Team Colors" )
-            , React.createElement('span', { className: "team-colors-chevron",}, showTeamColors ? "▾" : "▸")
-          )
-          , showTeamColors && (
-            React.createElement(React.Fragment, null
-              , React.createElement('div', { className: "lock-note", style: { marginTop: 10, marginBottom: 12 },}, "Make this section feel like your team — pick a theme. This is saved to the team and shows the same way for every coach, on every device."                         )
-              , React.createElement('div', { className: "team-color-swatch-row",}
-                , Object.keys(TEAM_THEMES).map((key) => {
-                    const t = TEAM_THEMES[key];
-                    const isActive = ((activeCoachTeam && activeCoachTeam.themeKey) || "gold") === key;
-                    return React.createElement('button', {
-                      key: key,
-                      className: `team-color-swatch ${isActive ? "active" : ""}`,
-                      title: t.label,
-                      onClick: () => setTeamTheme(key),}
-                      , React.createElement('span', { style: { background: t.accent },} )
-                      , React.createElement('span', { style: { background: t.accentSoft },} )
-                    );
-                  })
-              )
-            )
-          )
-        )
-      
-          )
-          , (
-        React.createElement('div', { className: "card team-colors-card" ,}
-          , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowTeamCoaches((s) => !s),}
-            , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Team Coaches" )
-            , React.createElement('span', { className: "team-colors-chevron",}, showTeamCoaches ? "▾" : "▸")
-          )
-          , showTeamCoaches && (() => {
-            const coachTeams = myTeams.filter((t) => t.role === "coach");
-            if (coachTeams.length === 0) {
-              return React.createElement('div', { className: "lock-note", style: { marginTop: 10 },}, "Create or join a team as Coach under Groups first."         );
-            }
-            const activeId = coachTeams.some((t) => t.id === activeCoachTeamId) ? activeCoachTeamId : coachTeams[0].id;
-            return (
-              React.createElement('div', { style: { marginTop: 10 },}
-                , React.createElement('div', { className: "lock-note", style: { marginBottom: 12 },}, "Grant another coach the same access you have — if you're out sick or can't make it, they'll see everything you see for this team: schedule, roster, notes, and more."                             )
-                , teamCoachesLoading ? (
-                  React.createElement('div', { className: "loading-row",}, "Loading…")
-                ) : (
-                  teamCoaches.map((c) => (
-                    React.createElement('div', { key: c.user_id, className: "group-row", style: { padding: "8px 0" },}
-                      , React.createElement('div', { className: "group-row-avatar small" ,}, initials(c.full_name || "?"))
-                      , React.createElement('div', { className: "group-row-info",}, React.createElement('div', { className: "group-row-name", style: { fontSize: 13 },}, c.full_name, c.user_id === _optionalChain([gSession, 'optionalAccess', _83 => _83.user, 'optionalAccess', _84 => _84.id]) ? " (you)" : ""))
-                      , c.user_id !== _optionalChain([gSession, 'optionalAccess', _85 => _85.user, 'optionalAccess', _86 => _86.id]) && (
-                        React.createElement('button', { className: "small-btn danger" , onClick: () => revokeCoachAccess(activeId, c.user_id),}, "Remove")
-                      )
+          , React.createElement('div', { className: "field-label coach-section-label", style: { marginTop: 14 },}, "Team Coaches"   )
+          , React.createElement('div', { className: "card team-colors-card" ,}
+            , (() => {
+                const coachTeams = myTeams.filter((t) => t.role === "coach");
+                if (coachTeams.length === 0) {
+                  return React.createElement('div', { className: "lock-note",}, "Create or join a team as Coach under Groups first."         );
+                }
+                const activeId = coachTeams.some((t) => t.id === activeCoachTeamId) ? activeCoachTeamId : coachTeams[0].id;
+                return (
+                  React.createElement('div', null
+                    , React.createElement('div', { className: "lock-note", style: { marginBottom: 12 },}, "Grant another coach the same access you have — if you're out sick or can't make it, they'll see everything you see for this team: schedule, roster, notes, and more."                             )
+                    , teamCoachesLoading ? (
+                      React.createElement('div', { className: "loading-row",}, "Loading…")
+                    ) : (
+                      teamCoaches.map((c) => (
+                        React.createElement('div', { key: c.user_id, className: "group-row", style: { padding: "8px 0" },}
+                          , React.createElement('div', { className: "group-row-avatar small" ,}, initials(c.full_name || "?"))
+                          , React.createElement('div', { className: "group-row-info",}, React.createElement('div', { className: "group-row-name", style: { fontSize: 13 },}, c.full_name, c.user_id === _optionalChain([gSession, 'optionalAccess', _83 => _83.user, 'optionalAccess', _84 => _84.id]) ? " (you)" : ""))
+                          , c.user_id !== _optionalChain([gSession, 'optionalAccess', _85 => _85.user, 'optionalAccess', _86 => _86.id]) && (
+                            React.createElement('button', { className: "small-btn danger" , onClick: () => revokeCoachAccess(activeId, c.user_id),}, "Remove")
+                          )
+                        )
+                      ))
                     )
-                  ))
-                )
-                , React.createElement('div', { style: { marginTop: 14 },}
-                  , React.createElement('label', { className: "field-label", style: { marginBottom: 6 },}, "Add A Coach By Email"    )
-                  , React.createElement('div', { style: { display: "flex", gap: 8 },}
-                    , React.createElement('input', { className: "text-input", type: "email", placeholder: "coach@email.com", value: newCoachEmail, onChange: (e) => setNewCoachEmail(e.target.value),} )
-                    , React.createElement('button', { className: "small-btn add" , onClick: () => grantCoachAccess(activeId),}, grantingCoach ? "…" : "Add")
+                    , React.createElement('div', { style: { marginTop: 14 },}
+                      , React.createElement('label', { className: "field-label", style: { marginBottom: 6 },}, "Add A Coach By Email"    )
+                      , React.createElement('div', { style: { display: "flex", gap: 8 },}
+                        , React.createElement('input', { className: "text-input", type: "email", placeholder: "coach@email.com", value: newCoachEmail, onChange: (e) => setNewCoachEmail(e.target.value),} )
+                        , React.createElement('button', { className: "small-btn add" , onClick: () => grantCoachAccess(activeId),}, grantingCoach ? "…" : "Add")
+                      )
+                      , React.createElement('div', { className: "lock-note", style: { marginTop: 6 },}, "They'll need an account already — have them tap \"Create Your Profile\" on the Home screen first if they don't have one."                     )
+                      , grantCoachError && React.createElement('div', { className: "error-text",}, grantCoachError)
+                    )
                   )
-                  , React.createElement('div', { className: "lock-note", style: { marginTop: 6 },}, "They'll need an account already — have them tap \"Create Your Profile\" on the Home screen first if they don't have one."                     )
-                  , grantCoachError && React.createElement('div', { className: "error-text",}, grantCoachError)
-                )
-              )
-            );
-          })()
+                );
+              })()
+          )
         )
-      
-          )
-          , (
-        React.createElement('div', { className: "card team-colors-card", ref: joinRequestsRef,}
-          , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowJoinRequests((s) => !s),}
-            , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Join Requests" , pendingJoinRequests.length > 0 ? ` (${pendingJoinRequests.length})` : "")
-            , React.createElement('span', { className: "team-colors-chevron",}, showJoinRequests ? "▾" : "▸")
-          )
-          , showJoinRequests && (() => {
-            const coachTeams = myTeams.filter((t) => t.role === "coach");
-            if (coachTeams.length === 0) {
-              return React.createElement('div', { className: "lock-note", style: { marginTop: 10 },}, "Create or join a team as Coach under Groups first."         );
-            }
-            return (
-              React.createElement('div', { style: { marginTop: 10 },}
-                , React.createElement('div', { className: "lock-note", style: { marginBottom: 12 },}, "Players can request to join this team on their own — approve only the ones you recognize."                )
-                , joinRequestsLoading ? (
-                  React.createElement('div', { className: "loading-row",}, "Loading…")
-                ) : pendingJoinRequests.length === 0 ? (
-                  React.createElement('div', { className: "empty-state",}, "No pending requests right now."    )
-                ) : (
-                  pendingJoinRequests.map((r) => (
-                    React.createElement('div', { key: r.id, className: "drill-card", style: { marginBottom: 10 },}
-                      , React.createElement('div', { className: "profile-name",}, r.player_name)
-                      , React.createElement('div', { className: "lib-meta",}, r.parent_email || "No parent email given", " · requested "   , new Date(r.requested_at).toLocaleDateString())
-                      , React.createElement('div', { style: { display: "flex", gap: 8, marginTop: 10 },}
-                        , React.createElement('button', { className: "small-btn add" , onClick: () => approveJoinRequest(r.id),}, "Approve")
-                        , React.createElement('button', { className: "small-btn danger" , onClick: () => denyJoinRequest(r.id),}, "Deny")
-                      )
+      )
+
+      , section === "coach" && canCoach && tab === "joinrequests" && (
+        React.createElement('div', null
+          , React.createElement('button', { className: "back-to-profile-btn", onClick: () => setTab(""),}, "← Back to Coach HQ"    )
+          , React.createElement('div', { className: "field-label coach-section-label", style: { marginTop: 14 },}, "Join Requests"   )
+          , React.createElement('div', { className: "card team-colors-card", ref: joinRequestsRef,}
+            , (() => {
+                const coachTeams = myTeams.filter((t) => t.role === "coach");
+                if (coachTeams.length === 0) {
+                  return React.createElement('div', { className: "lock-note",}, "Create or join a team as Coach under Groups first."         );
+                }
+                return (
+                  React.createElement('div', null
+                    , React.createElement('div', { className: "lock-note", style: { marginBottom: 12 },}, "Players can request to join this team on their own — approve only the ones you recognize."                )
+                    , joinRequestsLoading ? (
+                      React.createElement('div', { className: "loading-row",}, "Loading…")
+                    ) : pendingJoinRequests.length === 0 ? (
+                      React.createElement('div', { className: "empty-state",}, "No pending requests right now."    )
+                    ) : (
+                      pendingJoinRequests.map((r) => (
+                        React.createElement('div', { key: r.id, className: "drill-card", style: { marginBottom: 10 },}
+                          , React.createElement('div', { className: "profile-name",}, r.player_name)
+                          , React.createElement('div', { className: "lib-meta",}, r.parent_email || "No parent email given", " · requested "   , new Date(r.requested_at).toLocaleDateString())
+                          , React.createElement('div', { style: { display: "flex", gap: 8, marginTop: 10 },}
+                            , React.createElement('button', { className: "small-btn add" , onClick: () => approveJoinRequest(r.id),}, "Approve")
+                            , React.createElement('button', { className: "small-btn danger" , onClick: () => denyJoinRequest(r.id),}, "Deny")
+                          )
+                        )
+                      ))
                     )
-                  ))
-                )
-              )
-            );
-          })()
-        )
-      
+                  )
+                );
+              })()
           )
         )
       )
