@@ -519,17 +519,17 @@ function EyeMark({ className }) {
   );
 }
 
-function PremiumAmbient({ noGrid } = {}) {
+function PremiumAmbient({ noGrid, minimal } = {}) {
   return (
     React.createElement(React.Fragment, null
       , React.createElement('div', { className: `hp-carbon ${noGrid ? "hp-carbon-blacktop" : ""}`,} )
-      , React.createElement('div', { className: "hp-rays",} )
-      , React.createElement('div', { className: "hp-particles",}
+      , !minimal && React.createElement('div', { className: "hp-rays",} )
+      , !minimal && React.createElement('div', { className: "hp-particles",}
         , Array.from({ length: 22 }).map((_, i) => (
           React.createElement('span', { key: i, className: "hp-particle", style: { left: `${(i * 37) % 100}%`, animationDelay: `${(i * 1.7) % 14}s`, animationDuration: `${12 + (i % 6)}s` },} )
         ))
       )
-      , React.createElement('div', { className: "hp-hud", 'aria-hidden': "true",}
+      , !minimal && React.createElement('div', { className: "hp-hud", 'aria-hidden': "true",}
         , React.createElement('span', { className: "hp-hud-corner hp-hud-tl" ,} ), React.createElement('span', { className: "hp-hud-corner hp-hud-tr" ,} )
         , React.createElement('span', { className: "hp-hud-corner hp-hud-bl" ,} ), React.createElement('span', { className: "hp-hud-corner hp-hud-br" ,} )
       )
@@ -1083,7 +1083,7 @@ function TimeWheelPicker({ totalSeconds, onChange, maxMinutes = 90, big }) {
 }
 
 function QuickTimer({ large }) {
-  const [open, setOpen] = useState(!!large);
+  const [open, setOpen] = useState(false);
   const [baseSeconds, setBaseSeconds] = useState(5 * 60);
   const [secondsLeft, setSecondsLeft] = useState(5 * 60);
   const [running, setRunning] = useState(false);
@@ -1129,15 +1129,19 @@ function QuickTimer({ large }) {
 
   if (large) {
     return (
-      React.createElement('div', { className: "hero-timer-widget",}
-        , running ? (
-          React.createElement('div', { className: "timer-digits big" ,}, mm, ":", ss)
-        ) : (
-          React.createElement(TimeWheelPicker, { big: true, totalSeconds: secondsLeft, onChange: (s) => { setBaseSeconds(s); setSecondsLeft(s); },} )
+      React.createElement('div', { className: "hp-timer-compact",}
+        , React.createElement('div', { className: "hp-timer-row",}
+          , React.createElement('div', { className: "hp-timer-digits",}, mm, ":", ss)
+          , React.createElement('div', { className: "hp-timer-btns",}
+            , React.createElement('button', { className: "hp-timer-btn", onClick: () => setRunning((r) => !r), disabled: secondsLeft === 0,}, running ? "PAUSE" : "START")
+            , React.createElement('button', { className: "hp-timer-btn ghost" , onClick: () => { setRunning(false); setSecondsLeft(baseSeconds); },}, "RESET")
+          )
+          , React.createElement('button', { className: "hp-timer-expand-btn", onClick: () => setOpen((o) => !o), 'aria-label': "Adjust timer length",}, open ? "▲" : "▼")
         )
-        , React.createElement('div', { className: "timer-btns", style: { justifyContent: "center" },}
-          , React.createElement('button', { className: "timer-btn big" , onClick: () => setRunning((r) => !r), disabled: secondsLeft === 0,}, running ? "PAUSE" : "START")
-          , React.createElement('button', { className: "timer-btn ghost big"  , onClick: () => { setRunning(false); setSecondsLeft(baseSeconds); },}, "RESET")
+        , open && (
+          React.createElement('div', { className: "hp-timer-expanded",}
+            , editor
+          )
         )
       )
     );
@@ -7458,6 +7462,7 @@ function App() {
         .admin-badge-sm { font-size: 8px; padding: 4px 8px; }
         .admin-badge-corner { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 20px; z-index: 5; }
         .login-badge-corner { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 20px; z-index: 5; }
+        .admin-badge.admin-badge-corner, .admin-badge.login-badge-corner { background: rgba(0,0,0,0.4); color: #8F8368; border: 1px solid rgba(255,255,255,0.1); font-weight: 500; }
         .top-controls-home { max-width: 700px; margin: 8px auto 0; padding: 0 20px; text-align: center; }
         .home-content { margin-top: 4vh; }
         .home-content .brand-lockup { margin-top: 3vh; margin-bottom: 2vh; }
@@ -7638,30 +7643,38 @@ function App() {
         .hp-hud-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
         .hp-hud-br { bottom: 0; right: 0; border-left: none; border-top: none; }
 
-        .hp-about { position: relative; z-index: 2; margin: 4px auto 0; background: rgba(20,17,13,0.5); backdrop-filter: blur(8px); border-color: rgba(217,174,63,0.25); color: var(--accent); }
+        .hp-about { position: relative; z-index: 2; margin: 0; background: transparent; border: none; color: #8F8368; font-size: 11px; padding: 4px 8px; }
 
-        .hp-hero { position: relative; margin: 34px 0 6px; display: flex; flex-direction: column; align-items: center; }
-        .hp-hero::before { content: ""; position: absolute; top: -130px; left: 50%; width: 520px; max-width: 140vw; height: 420px; transform: translateX(-50%);
-          background: radial-gradient(ellipse at 50% 0%, rgba(245,223,160,0.16), transparent 62%); pointer-events: none; z-index: 0; }
-        .hp-eye { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(360px, 92vw); opacity: 0.13; z-index: 0; pointer-events: none;
-          filter: drop-shadow(0 0 26px var(--accent)); }
-        @media (prefers-reduced-motion: no-preference) { .hp-eye { animation: hp-eye-breathe 7s ease-in-out infinite; } }
-        @keyframes hp-eye-breathe { 0%, 100% { opacity: 0.10; } 50% { opacity: 0.19; } }
-        .hp-hero .brand-lockup { position: relative; z-index: 1; filter: drop-shadow(0 0 30px rgba(217,174,63,0.35)); }
-        .hp-hero .brand-top { font-size: clamp(18px, 3.6vh, 27px); letter-spacing: 0.16em; }
-        .hp-hero .brand-rest { font-size: clamp(50px, 12.5vh, 104px); }
-        .hp-hero .brand-icon { width: clamp(64px, 15vh, 128px); }
+        /* Brand moment: restrained authority via scale/contrast/breathing room only —
+           no glow, no drop-shadow, no ambient burst, no animation. */
+        .hp-hero { position: relative; margin: 28px 0 4px; display: flex; flex-direction: column; align-items: center; }
+        .hp-hero-label { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: #A79E8E; font-size: clamp(13px, 2.6vh, 16px); margin-bottom: 14px; }
+        .hp-vision-mark { width: min(210px, 56vw); height: auto; display: block; }
 
-        .hp-timer-card { position: relative; margin-top: 30px; width: 100%; background: rgba(18,15,10,0.5); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-          border: 1px solid rgba(217,174,63,0.3); border-radius: 20px; padding: 20px 20px 24px; box-shadow: 0 0 40px rgba(217,174,63,0.08), inset 0 1px 0 rgba(255,255,255,0.05); }
+        .hp-timer-compact { position: relative; margin-top: 26px; width: 100%; background: linear-gradient(165deg, rgba(20,19,17,0.9), rgba(10,10,10,0.95));
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 16px; }
+        .hp-timer-row { display: flex; align-items: center; gap: 12px; }
+        .hp-timer-digits { font-family: 'Space Mono', monospace; font-size: 26px; font-weight: 600; color: #F1EDE4; min-width: 78px; }
+        .hp-timer-btns { display: flex; gap: 8px; flex: 1; }
+        .hp-timer-btn { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.04em; background: var(--accent); color: #0E0D0B; border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; flex: 1; }
+        .hp-timer-btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.14); color: #B9B0A2; flex: none; padding: 9px 12px; }
+        .hp-timer-expand-btn { background: transparent; border: none; color: #6B6255; font-size: 12px; padding: 6px; cursor: pointer; flex-shrink: 0; }
+        .hp-timer-expanded { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
 
-        .hp-tiles { display: flex; gap: 12px; margin-top: 30px; width: 100%; }
-        .hp-tile { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 9px; background: linear-gradient(160deg, rgba(32,27,19,0.6), rgba(9,8,5,0.72));
-          backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(217,174,63,0.22); border-radius: 18px; padding: 20px 8px 16px; cursor: pointer;
-          transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; box-shadow: 0 8px 22px rgba(0,0,0,0.4); }
-        .hp-tile:hover, .hp-tile:active { transform: translateY(-3px); border-color: rgba(217,174,63,0.6); box-shadow: 0 12px 28px rgba(0,0,0,0.5), 0 0 22px rgba(217,174,63,0.2); }
-        .hp-tile-icon { width: 26px; height: 26px; color: var(--accent); filter: drop-shadow(0 0 6px var(--accent)); }
+        .hp-tiles { display: flex; gap: 10px; margin-top: 16px; width: 100%; }
+        .hp-tile { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 9px; background: linear-gradient(165deg, rgba(20,19,17,0.9), rgba(10,10,10,0.95));
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px 8px 14px; cursor: pointer;
+          transition: transform 0.16s ease, border-color 0.16s ease; }
+        .hp-tile:hover, .hp-tile:active { transform: scale(0.98); border-color: rgba(255,255,255,0.16); }
+        .hp-tile-icon { width: 24px; height: 24px; color: var(--accent); }
         .hp-tile-label { font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: #F1EDE4; text-align: center; line-height: 1.3; }
+
+        /* Secondary tier: quiet, collapsed-by-default, visually subordinate to the
+           brand/timer/navigation above. */
+        .hp-secondary-row { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; width: 100%; }
+        .hp-secondary-item { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 14px; }
+        .hp-secondary-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: transparent; border: none; color: #9C9280; font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 0.03em; cursor: pointer; padding: 0; }
+        .hp-secondary-chevron { color: #6B6255; font-size: 11px; }
 
         .hp-glass { margin-top: 24px; width: 100%; background: rgba(18,15,10,0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: rgba(217,174,63,0.2); }
         .hp-cta { margin-top: 24px; }
@@ -8435,17 +8448,12 @@ function App() {
 
       , section === "home" && (
         React.createElement('div', { className: "home-premium",}
-          , React.createElement(PremiumAmbient, null )
+          , React.createElement(PremiumAmbient, { noGrid: true, minimal: true,} )
 
           , React.createElement('div', { className: "hp-content",}
-            , React.createElement('button', { className: "about-bubble hp-about" , onClick: () => goSection("about"),}
-              , React.createElement('svg', { width: "14", height: "14", viewBox: "0 0 24 24"   , fill: "currentColor", style: { verticalAlign: "-2px", marginRight: 5 },}, React.createElement('circle', { cx: "12", cy: "8", r: "4",} ), React.createElement('path', { d: "M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"      ,} )), "About Coach Wayne"
-
-            )
-
             , React.createElement('div', { className: "hp-hero",}
-              , React.createElement(EyeMark, { className: "hp-eye",} )
-              , React.createElement(BrandLockup, { sparkle: rankKey === "elite" || rankKey === "legend", label: brandLabel, onClick: () => setBrandPreference(brandLabel === "her" ? "him" : "her"),} )
+              , React.createElement('div', { className: "hp-hero-label",}, "Becoming")
+              , React.createElement('img', { className: "hp-vision-mark", src: "./vision-mark-v3-final.png", alt: "HIM.",} )
             )
 
             , React.createElement('div', { className: "hp-timer-card",}
@@ -8467,51 +8475,59 @@ function App() {
               )
             )
 
-            , homeAccentLoaded && (
-              React.createElement('div', { className: "card team-colors-card home-colors-card hp-glass"   ,}
-                , React.createElement('button', { className: "team-colors-toggle", onClick: () => setShowHomeColors((s) => !s),}
-                  , React.createElement('span', { className: "field-label", style: { marginBottom: 0 },}, "Customize Colors" )
-                  , React.createElement('span', { className: "team-colors-chevron",}, showHomeColors ? "▾" : "▸")
-                )
-                , showHomeColors && (
-                  React.createElement(React.Fragment, null
-                    , React.createElement('div', { className: "lock-note", style: { marginTop: 10, marginBottom: 12 },}, "Make this device's Home screen your own — pick a preset or set your own two colors."                )
-                    , React.createElement('div', { className: "team-color-swatch-row",}
-                      , [
-                        { name: "Default Gold", accent: HOME_THEME.accent, accentSoft: HOME_THEME.accentSoft },
-                        { name: "Red & Black", accent: "#E24C4C", accentSoft: "#8C1E1E" },
-                        { name: "Blue & Orange", accent: "#4C8DFF", accentSoft: "#FF8A3D" },
-                        { name: "Green & Gold", accent: "#4CAF7D", accentSoft: "#D9AE3F" },
-                        { name: "Purple & Silver", accent: "#9D7EE0", accentSoft: "#C7CDD2" },
-                        { name: "Pink & Purple", accent: "#FF6EC7", accentSoft: "#9D4EDD" },
-                        { name: "Ice Blue", accent: "#CFEFFB", accentSoft: "#7FC7DE" },
-                        { name: "Teal & Black", accent: "#3DBFAE", accentSoft: "#2E3438" },
-                      ].map((c) => (
-                        React.createElement('button', {
-                          key: c.name,
-                          className: `team-color-swatch ${(homeAccent ? homeAccent.accent === c.accent && homeAccent.accentSoft === c.accentSoft : c.name === "Default Gold") ? "active" : ""}`,
-                          title: c.name,
-                          onClick: () => (c.name === "Default Gold" ? clearHomeColors() : setHomeColors(c.accent, c.accentSoft)),}
+            , React.createElement('div', { className: "hp-secondary-row",}
+              , homeAccentLoaded && (
+                React.createElement('div', { className: "hp-secondary-item",}
+                  , React.createElement('button', { className: "hp-secondary-toggle", onClick: () => setShowHomeColors((s) => !s),}
+                    , React.createElement('span', null, "Personalize Accent Color")
+                    , React.createElement('span', { className: "hp-secondary-chevron",}, showHomeColors ? "▾" : "▸")
+                  )
+                  , showHomeColors && (
+                    React.createElement(React.Fragment, null
+                      , React.createElement('div', { className: "lock-note", style: { marginTop: 10, marginBottom: 12 },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
+                      , React.createElement('div', { className: "team-color-swatch-row",}
+                        , [
+                          { name: "Default Gold", accent: HOME_THEME.accent, accentSoft: HOME_THEME.accentSoft },
+                          { name: "Red & Black", accent: "#E24C4C", accentSoft: "#8C1E1E" },
+                          { name: "Blue & Orange", accent: "#4C8DFF", accentSoft: "#FF8A3D" },
+                          { name: "Green & Gold", accent: "#4CAF7D", accentSoft: "#D9AE3F" },
+                          { name: "Purple & Silver", accent: "#9D7EE0", accentSoft: "#C7CDD2" },
+                          { name: "Pink & Purple", accent: "#FF6EC7", accentSoft: "#9D4EDD" },
+                          { name: "Ice Blue", accent: "#CFEFFB", accentSoft: "#7FC7DE" },
+                          { name: "Teal & Black", accent: "#3DBFAE", accentSoft: "#2E3438" },
+                        ].map((c) => (
+                          React.createElement('button', {
+                            key: c.name,
+                            className: `team-color-swatch ${(homeAccent ? homeAccent.accent === c.accent && homeAccent.accentSoft === c.accentSoft : c.name === "Default Gold") ? "active" : ""}`,
+                            title: c.name,
+                            onClick: () => (c.name === "Default Gold" ? clearHomeColors() : setHomeColors(c.accent, c.accentSoft)),}
 
-                          , React.createElement('span', { style: { background: c.accent },} )
-                          , React.createElement('span', { style: { background: c.accentSoft },} )
-                        )
-                      ))
-                    )
-                    , React.createElement('div', { className: "team-color-custom-row",}
-                      , React.createElement('label', { className: "field-label", style: { marginBottom: 6 },}, "Or Pick Your Own"   )
-                      , React.createElement('div', { style: { display: "flex", gap: 12, alignItems: "center" },}
-                        , React.createElement('div', { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },}
-                          , React.createElement('input', { type: "color", value: (homeAccent || HOME_THEME).accent, onChange: (e) => setHomeColors(e.target.value, (homeAccent || HOME_THEME).accentSoft),} )
-                          , React.createElement('span', { className: "lock-note",}, "Main")
-                        )
-                        , React.createElement('div', { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },}
-                          , React.createElement('input', { type: "color", value: (homeAccent || HOME_THEME).accentSoft, onChange: (e) => setHomeColors((homeAccent || HOME_THEME).accent, e.target.value),} )
-                          , React.createElement('span', { className: "lock-note",}, "Accent")
+                            , React.createElement('span', { style: { background: c.accent },} )
+                            , React.createElement('span', { style: { background: c.accentSoft },} )
+                          )
+                        ))
+                      )
+                      , React.createElement('div', { className: "team-color-custom-row",}
+                        , React.createElement('label', { className: "field-label", style: { marginBottom: 6 },}, "Or Pick Your Own"   )
+                        , React.createElement('div', { style: { display: "flex", gap: 12, alignItems: "center" },}
+                          , React.createElement('div', { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },}
+                            , React.createElement('input', { type: "color", value: (homeAccent || HOME_THEME).accent, onChange: (e) => setHomeColors(e.target.value, (homeAccent || HOME_THEME).accentSoft),} )
+                            , React.createElement('span', { className: "lock-note",}, "Main")
+                          )
+                          , React.createElement('div', { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },}
+                            , React.createElement('input', { type: "color", value: (homeAccent || HOME_THEME).accentSoft, onChange: (e) => setHomeColors((homeAccent || HOME_THEME).accent, e.target.value),} )
+                            , React.createElement('span', { className: "lock-note",}, "Accent")
+                          )
                         )
                       )
                     )
                   )
+                )
+              )
+              , React.createElement('div', { className: "hp-secondary-item",}
+                , React.createElement('button', { className: "hp-secondary-toggle", onClick: () => goSection("about"),}
+                  , React.createElement('span', null, "About Coach Wayne")
+                  , React.createElement('span', { className: "hp-secondary-chevron",}, "›")
                 )
               )
             )
