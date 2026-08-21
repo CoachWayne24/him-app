@@ -5567,6 +5567,7 @@ function App() {
   const [homeAccent, setHomeAccent] = useState(null); // { accent, accentSoft } | null = use default brand gold
   const [showHomeColors, setShowHomeColors] = useState(false);
   const [homeAccentLoaded, setHomeAccentLoaded] = useState(false);
+  const [showHomeMenu, setShowHomeMenu] = useState(false);
   useEffect(() => {
     (async () => {
       try {
@@ -7461,6 +7462,7 @@ function App() {
         .admin-badge { font-family: 'Space Mono', monospace; font-size: 10px; color: #0E0D0B; background: var(--accent-soft); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
         .admin-badge-sm { font-size: 8px; padding: 4px 8px; }
         .admin-badge-corner { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 20px; z-index: 5; }
+        .hamburger-menu-btn.admin-badge-corner { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 20px; transform: none; }
         .login-badge-corner { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 20px; z-index: 5; }
         .admin-badge.admin-badge-corner, .admin-badge.login-badge-corner { background: rgba(0,0,0,0.4); color: #8F8368; border: 1px solid rgba(255,255,255,0.1); font-weight: 500; }
         .top-controls-home { max-width: 700px; margin: 8px auto 0; padding: 0 20px; text-align: center; }
@@ -7648,7 +7650,8 @@ function App() {
         /* Brand moment: restrained authority via scale/contrast/breathing room only —
            no glow, no drop-shadow, no ambient burst, no animation. */
         .hp-hero { position: relative; margin: 28px 0 4px; display: flex; flex-direction: column; align-items: center; }
-        .hp-hero-label { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: #A79E8E; font-size: clamp(13px, 2.6vh, 16px); margin-bottom: 14px; }
+        .hp-hero-label { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: #A79E8E; font-size: clamp(13px, 2.6vh, 16px); margin-bottom: 7px; }
+        .hp-menu-status { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: #8F8368; padding: 6px 8px 2px; }
         .hp-him-lockup { width: 330px; max-width: 100%; height: auto; display: block; }
 
         .hp-timer-compact { position: relative; margin-top: 26px; width: 100%; background: linear-gradient(165deg, rgba(20,19,17,0.9), rgba(10,10,10,0.95));
@@ -8378,8 +8381,35 @@ function App() {
         , section === "home" && !gSession && (
           React.createElement('span', { className: "admin-badge admin-badge-sm login-badge-corner"  , onClick: () => goSection("groups", "groups"),}, "LOG IN" )
         )
-        , section === "home" && isAdmin && (
-          React.createElement('span', { className: "admin-badge admin-badge-sm admin-badge-corner"  ,}, "ADMIN MODE" )
+        , section === "home" && (
+          React.createElement('button', { className: "hamburger-menu-btn admin-badge-corner", onClick: () => setShowHomeMenu((s) => !s), 'aria-label': "Menu",}
+            , React.createElement('span', null ), React.createElement('span', null ), React.createElement('span', null )
+          )
+        )
+      )
+      , section === "home" && showHomeMenu && (
+        React.createElement('div', { className: "profile-settings-menu",}
+          , isAdmin && React.createElement('div', { className: "hp-menu-status",}, "ADMIN MODE")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); goSection("about"); },}, "About Coach Wayne")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => setShowHomeColors((s) => !s),}, "Personalize Accent Color" , showHomeColors ? " ▾" : " ▸")
+          , showHomeColors && homeAccentLoaded && (
+            React.createElement('div', { style: { padding: "10px 4px 4px" },}
+              , React.createElement('div', { className: "lock-note", style: { marginBottom: 10 },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
+              , React.createElement('div', { className: "team-color-swatch-row",}
+                , Object.keys(TEAM_THEMES).map((key) => {
+                    const t = TEAM_THEMES[key];
+                    const isActive = homeAccent ? (homeAccent.accent === t.accent && homeAccent.accentSoft === t.accentSoft) : key === "gold";
+                    return React.createElement('button', { key: key, className: `team-color-swatch ${isActive ? "active" : ""}`, title: t.label, onClick: () => (key === "gold" ? clearHomeColors() : setHomeColors(t.accent, t.accentSoft)),}
+                      , React.createElement('span', { style: { background: t.accent },} )
+                      , React.createElement('span', { style: { background: t.accentSoft },} )
+                    );
+                  })
+              )
+            )
+          )
+          , gSession && (
+            React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
+          )
         )
       )
 
@@ -8472,63 +8502,6 @@ function App() {
               , React.createElement('button', { className: "hp-tile", onClick: () => goSection("coach", ""),}
                 , React.createElement('svg', { className: "hp-tile-icon", viewBox: "0 0 24 24"   , fill: "none", stroke: "currentColor", strokeWidth: "1.5",}, React.createElement('rect', { x: "5", y: "4", width: "14", height: "17", rx: "2",} ), React.createElement('path', { d: "M9 3h6v3H9zM8 11h8M8 15h5"   ,} ))
                 , React.createElement('span', { className: "hp-tile-label",}, "Coach")
-              )
-            )
-
-            , React.createElement('div', { className: "hp-secondary-row",}
-              , homeAccentLoaded && (
-                React.createElement('div', { className: "hp-secondary-item",}
-                  , React.createElement('button', { className: "hp-secondary-toggle", onClick: () => setShowHomeColors((s) => !s),}
-                    , React.createElement('span', null, "Personalize Accent Color")
-                    , React.createElement('span', { className: "hp-secondary-chevron",}, showHomeColors ? "▾" : "▸")
-                  )
-                  , showHomeColors && (
-                    React.createElement(React.Fragment, null
-                      , React.createElement('div', { className: "lock-note", style: { marginTop: 10, marginBottom: 12 },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
-                      , React.createElement('div', { className: "team-color-swatch-row",}
-                        , [
-                          { name: "Default Gold", accent: HOME_THEME.accent, accentSoft: HOME_THEME.accentSoft },
-                          { name: "Red & Black", accent: "#E24C4C", accentSoft: "#8C1E1E" },
-                          { name: "Blue & Orange", accent: "#4C8DFF", accentSoft: "#FF8A3D" },
-                          { name: "Green & Gold", accent: "#4CAF7D", accentSoft: "#D9AE3F" },
-                          { name: "Purple & Silver", accent: "#9D7EE0", accentSoft: "#C7CDD2" },
-                          { name: "Pink & Purple", accent: "#FF6EC7", accentSoft: "#9D4EDD" },
-                          { name: "Ice Blue", accent: "#CFEFFB", accentSoft: "#7FC7DE" },
-                          { name: "Teal & Black", accent: "#3DBFAE", accentSoft: "#2E3438" },
-                        ].map((c) => (
-                          React.createElement('button', {
-                            key: c.name,
-                            className: `team-color-swatch ${(homeAccent ? homeAccent.accent === c.accent && homeAccent.accentSoft === c.accentSoft : c.name === "Default Gold") ? "active" : ""}`,
-                            title: c.name,
-                            onClick: () => (c.name === "Default Gold" ? clearHomeColors() : setHomeColors(c.accent, c.accentSoft)),}
-
-                            , React.createElement('span', { style: { background: c.accent },} )
-                            , React.createElement('span', { style: { background: c.accentSoft },} )
-                          )
-                        ))
-                      )
-                      , React.createElement('div', { className: "team-color-custom-row",}
-                        , React.createElement('label', { className: "field-label", style: { marginBottom: 6 },}, "Or Pick Your Own"   )
-                        , React.createElement('div', { style: { display: "flex", gap: 12, alignItems: "center" },}
-                          , React.createElement('div', { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },}
-                            , React.createElement('input', { type: "color", value: (homeAccent || HOME_THEME).accent, onChange: (e) => setHomeColors(e.target.value, (homeAccent || HOME_THEME).accentSoft),} )
-                            , React.createElement('span', { className: "lock-note",}, "Main")
-                          )
-                          , React.createElement('div', { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },}
-                            , React.createElement('input', { type: "color", value: (homeAccent || HOME_THEME).accentSoft, onChange: (e) => setHomeColors((homeAccent || HOME_THEME).accent, e.target.value),} )
-                            , React.createElement('span', { className: "lock-note",}, "Accent")
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-              , React.createElement('div', { className: "hp-secondary-item",}
-                , React.createElement('button', { className: "hp-secondary-toggle", onClick: () => goSection("about"),}
-                  , React.createElement('span', null, "About Coach Wayne")
-                  , React.createElement('span', { className: "hp-secondary-chevron",}, "›")
-                )
               )
             )
 
