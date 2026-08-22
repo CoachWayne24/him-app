@@ -8392,6 +8392,12 @@ function App() {
           , "showHomeMenu: " , String(showHomeMenu)
           , React.createElement('br', null )
           , "showHomeColors: " , String(showHomeColors)
+          , React.createElement('br', null )
+          , "condition result: " , String(section === "home" && showHomeMenu)
+        )
+      )
+      , section === "home" && (
+        React.createElement('div', { style: { position: "fixed", top: 130, left: 10, zIndex: 99999, background: "orange", color: "black", fontFamily: "monospace", fontSize: 14, fontWeight: "bold", padding: "10px" },}, "UNCONDITIONAL TEST BOX"
         )
       )
       , section === "home" && showHomeMenu && (
