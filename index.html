@@ -199,18 +199,6 @@ const SEED_DRILLS = [
   { id: "d52", name: "No-Look Passing Reads", cat: "passing", level: 3, equip: "ball", minutes: 8, sets: "6 x 5 reps", desc: "Eyes on the defender, pass to the cutter you see in your periphery. Advanced — only after the basics are automatic.", tier: "pro", group: "partner" },
 ];
 
-const SEED_COACH_BIO = `I played college basketball as a starting point guard, then spent the years after that learning the other side of the game — coaching.
-
-I didn't always have great coaches growing up. That taught me more than any drill ever could. I know what it feels like to be handed a generic workout with no real teaching behind it, and I promised myself I'd coach differently once I got the chance.
-
-Since then, I've studied the way the best in the world train — not just what they do, but how they think. That work ethic, that obsession with details, shaped how I coach as much as anything I learned as a player.
-
-Last season, I coached my 4th grade boys travel team to a state championship. The trophy isn't really the point — the way we got there is. Every plan in this app is built the same way I coached that team: real skill work, real physical development, and just as much attention on the mental side of the game. Confidence, composure, how you respond after a mistake — that's trainable too, and most programs ignore it completely.
-
-This isn't a drill database. It's what I've learned as a player, as a coach, and as a student of the game, built into something you can actually use.
-
-— Coach Wayne`;
-
 const SEED_QUOTES = [
   { id: "q1", text: "Some guys put the work in, don't believe it. Some guys believe and don't put the work in. I believe it and I put the work in.", author: "Anthony Edwards", audience: "him" },
   { id: "q2", text: "Have a maniacal work ethic. You want to over-prepare so that luck becomes a product of design.", author: "Kobe Bryant", audience: "him" },
@@ -6062,8 +6050,6 @@ function App() {
   const [starterWorkoutsLoaded, setStarterWorkoutsLoaded] = useState(false);
   const [editingQuote, setEditingQuote] = useState(null);
   const [tutorialVideoUrl, setTutorialVideoUrl] = useState("");
-  const [coachBio, setCoachBio] = useState("");
-  const [coachBioInput, setCoachBioInput] = useState("");
   const [tutorialInput, setTutorialInput] = useState("");
   const [reqSent, setReqSent] = useState(false);
 
@@ -6120,15 +6106,6 @@ function App() {
         setTutorialVideoUrl(val);
         setTutorialInput(val);
       } catch (e50) { setTutorialVideoUrl(""); }
-    })();
-    (async () => {
-      try {
-        const res = await window.storage.get("coach-bio", true);
-        const val = res && res.value ? res.value : SEED_COACH_BIO;
-        setCoachBio(val);
-        setCoachBioInput(val);
-        if (!res || !res.value) { try { await window.storage.set("coach-bio", SEED_COACH_BIO, true); } catch (e51) {} }
-      } catch (e52) { setCoachBio(SEED_COACH_BIO); setCoachBioInput(SEED_COACH_BIO); }
     })();
     (async () => {
       try {
@@ -6563,10 +6540,6 @@ function App() {
   const saveTutorialVideo = async () => {
     setTutorialVideoUrl(tutorialInput);
     try { await window.storage.set("tutorial-video", tutorialInput, true); } catch (e90) {}
-  };
-  const saveCoachBio = async () => {
-    setCoachBio(coachBioInput);
-    try { await window.storage.set("coach-bio", coachBioInput, true); } catch (e91) {}
   };
 
   const visibleLibrary = getPool(ageGroup);
@@ -7652,6 +7625,14 @@ function App() {
         .hp-hero { position: relative; margin: 33px 0 4px; display: flex; flex-direction: column; align-items: center; }
         .hp-hero-label { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: #A79E8E; font-size: clamp(13px, 2.6vh, 16px); margin-bottom: 2px; }
         .hp-menu-status { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: #8F8368; padding: 6px 8px 2px; }
+        .hp-home-menu { max-width: 460px; width: 100%; margin: 0 auto; overflow: hidden; max-height: 0; opacity: 0;
+          background: rgba(20,17,13,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(217,174,63,0.28); border-radius: 14px; text-align: left;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+          transition: max-height 0.28s ease, opacity 0.22s ease, margin 0.28s ease; }
+        .hp-home-menu.open { max-height: 420px; opacity: 1; margin: 0 auto 14px; padding: 10px 12px; }
+        .hp-home-menu-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B6255; padding: 10px 8px 4px; }
+        .hp-home-menu-label:first-child { padding-top: 4px; }
         .hp-him-lockup { width: 330px; max-width: 100%; height: auto; display: block; }
 
         .hp-timer-compact { position: relative; margin-top: 26px; width: 100%; background: linear-gradient(165deg, rgba(20,19,17,0.9), rgba(10,10,10,0.95));
@@ -8388,57 +8369,36 @@ function App() {
         )
       )
       , section === "home" && (
-        React.createElement('div', { style: { position: "fixed", top: 60, left: 10, zIndex: 99999, background: "black", color: "#0F0", fontFamily: "monospace", fontSize: 13, padding: "6px 10px", border: "2px solid #0F0" },}
-          , "showHomeMenu: " , String(showHomeMenu)
-          , React.createElement('br', null )
-          , "showHomeColors: " , String(showHomeColors)
-          , React.createElement('br', null )
-          , "condition result: " , String(section === "home" && showHomeMenu)
+        React.createElement('div', { className: `hp-home-menu ${showHomeMenu ? "open" : ""}`,}
+          , React.createElement('div', { className: "hp-home-menu-label",}, "Personalization")
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => setShowHomeColors((s) => !s),}, "Accent Color" , showHomeColors ? " ▾" : " ▸")
+          , showHomeColors && homeAccentLoaded && (
+            React.createElement('div', { style: { padding: "8px 4px 6px" },}
+              , React.createElement('div', { className: "lock-note", style: { marginBottom: 10 },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
+              , React.createElement('div', { className: "team-color-swatch-row",}
+                , Object.keys(TEAM_THEMES).map((key) => {
+                    const t = TEAM_THEMES[key];
+                    const isActive = homeAccent ? (homeAccent.accent === t.accent && homeAccent.accentSoft === t.accentSoft) : key === "gold";
+                    return React.createElement('button', { key: key, className: `team-color-swatch ${isActive ? "active" : ""}`, title: t.label, onClick: () => (key === "gold" ? clearHomeColors() : setHomeColors(t.accent, t.accentSoft)),}
+                      , React.createElement('span', { style: { background: t.accent },} )
+                      , React.createElement('span', { style: { background: t.accentSoft },} )
+                    );
+                  })
+              )
+            )
+          )
+          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); setBrandPreference(brandLabel === "her" ? "him" : "her"); },}, "Switch to "
+              , brandLabel === "her" ? "HIM." : "HER."
+          )
+          , React.createElement('div', { className: "hp-home-menu-label",}, "Account")
+          , isAdmin && React.createElement('div', { className: "hp-menu-status",}, "ADMIN MODE")
+          , !gSession ? (
+            React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); goSection("groups", "groups"); },}, "Log In")
+          ) : (
+            React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
+          )
         )
       )
-      , section === "home" && (
-        React.createElement('div', { style: { position: "fixed", top: 130, left: 10, zIndex: 99999, background: "orange", color: "black", fontFamily: "monospace", fontSize: 14, fontWeight: "bold", padding: "10px" },}, "UNCONDITIONAL TEST BOX"
-        )
-      )
-      , section === "home" && showHomeMenu && React.createElement('div', { style: { background: "lime", color: "black", fontSize: 30, fontWeight: "bold", padding: 20, margin: 10, visibility: "visible", opacity: 1, display: "block" },}, "TRIVIAL TEST"
-      )
-      , section === "home" && showHomeMenu && (() => {
-          try {
-            return React.createElement('div', { className: "profile-settings-menu", style: { background: "red", border: "4px solid white", visibility: "visible", opacity: 1, display: "block", backdropFilter: "none", WebkitBackdropFilter: "none", transform: "none", position: "static" },}
-              , isAdmin && React.createElement('div', { className: "hp-menu-status", style: { color: "white", fontSize: 18, fontWeight: "bold" },}, "ADMIN MODE")
-              , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); goSection("about"); },}, "About Coach Wayne")
-              , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => setShowHomeColors((s) => !s),}, "Personalize Accent Color" , showHomeColors ? " ▾" : " ▸")
-              , showHomeColors && homeAccentLoaded && (
-                React.createElement('div', { style: { padding: "10px 4px 4px", background: "blue", border: "4px solid white" },}
-                  , React.createElement('div', { style: { color: "white", fontSize: 20, fontWeight: "bold", marginBottom: 10 },}, "COLOR PANEL ACTIVE")
-                  , React.createElement('div', { className: "lock-note", style: { marginBottom: 10, color: "white" },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
-                  , React.createElement('div', { className: "team-color-swatch-row",}
-                    , Object.keys(TEAM_THEMES).map((key) => {
-                        const t = TEAM_THEMES[key];
-                        const isActive = homeAccent ? (homeAccent.accent === t.accent && homeAccent.accentSoft === t.accentSoft) : key === "gold";
-                        return React.createElement('button', { key: key, className: `team-color-swatch ${isActive ? "active" : ""}`, title: t.label, onClick: () => (key === "gold" ? clearHomeColors() : setHomeColors(t.accent, t.accentSoft)),}
-                          , React.createElement('span', { style: { background: t.accent },} )
-                          , React.createElement('span', { style: { background: t.accentSoft },} )
-                        );
-                      })
-                  )
-                )
-              )
-              , gSession && (
-                React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
-              )
-            );
-          } catch (diagErr) {
-            return React.createElement('div', { style: { position: "fixed", top: 200, left: 10, right: 10, zIndex: 999999, background: "white", color: "red", fontFamily: "monospace", fontSize: 14, fontWeight: "bold", padding: "14px", border: "4px solid red", whiteSpace: "pre-wrap", wordBreak: "break-word" },}
-              , "MENU RENDER ERROR:\n" , String(diagErr && diagErr.message ? diagErr.message : diagErr)
-              , React.createElement('br', null )
-              , React.createElement('br', null )
-              , String(diagErr && diagErr.stack ? diagErr.stack : "(no stack)")
-            );
-          }
-        })()
-
-
       , showAddProfile && section === "player" && (
         React.createElement('div', { className: "add-profile-form",}
           , React.createElement('input', { className: "text-input", style: { marginBottom: 8 }, value: newProfileName, onChange: (e) => setNewProfileName(e.target.value), placeholder: "Name (optional)" ,} )
@@ -8536,21 +8496,6 @@ function App() {
                 , React.createElement('button', { className: "create-profile-home-btn hp-cta" , onClick: () => goSection("groups", "groups"),}, "+ Create Your Profile"   )
                 , React.createElement('div', { className: "create-profile-home-note",}, "For parents & coaches — sign up here first. Players create their own profile in the Player tab afterward."                  )
               )
-            )
-          )
-        )
-      )
-
-      , section === "about" && (
-        React.createElement('div', { className: "card",}
-          , React.createElement('button', { className: "back-to-profile-btn", style: { marginBottom: 10 }, onClick: () => goSection("home"),}, "← Home" )
-          , React.createElement('div', { className: "field-label", style: { marginBottom: 14 },}, "About Coach Wayne"  )
-          , !isAdmin ? (
-            React.createElement('p', { className: "bio-text",}, coachBio)
-          ) : (
-            React.createElement(React.Fragment, null
-              , React.createElement('textarea', { className: "text-input", style: { minHeight: 260 }, value: coachBioInput, onChange: (e) => setCoachBioInput(e.target.value),} )
-              , React.createElement('button', { className: "generate-btn", onClick: saveCoachBio,}, "Save Bio" )
             )
           )
         )
