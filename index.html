@@ -8387,14 +8387,22 @@ function App() {
           )
         )
       )
+      , section === "home" && (
+        React.createElement('div', { style: { position: "fixed", top: 60, left: 10, zIndex: 99999, background: "black", color: "#0F0", fontFamily: "monospace", fontSize: 13, padding: "6px 10px", border: "2px solid #0F0" },}
+          , "showHomeMenu: " , String(showHomeMenu)
+          , React.createElement('br', null )
+          , "showHomeColors: " , String(showHomeColors)
+        )
+      )
       , section === "home" && showHomeMenu && (
-        React.createElement('div', { className: "profile-settings-menu",}
-          , isAdmin && React.createElement('div', { className: "hp-menu-status",}, "ADMIN MODE")
-          , React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); goSection("about"); },}, "About Coach Wayne")
-          , React.createElement('button', { className: "profile-settings-item", onClick: () => setShowHomeColors((s) => !s),}, "Personalize Accent Color" , showHomeColors ? " ▾" : " ▸")
+        React.createElement('div', { className: "profile-settings-menu", style: { background: "red", border: "4px solid white" },}
+          , isAdmin && React.createElement('div', { className: "hp-menu-status", style: { color: "white", fontSize: 18, fontWeight: "bold" },}, "ADMIN MODE")
+          , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); goSection("about"); },}, "About Coach Wayne")
+          , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => setShowHomeColors((s) => !s),}, "Personalize Accent Color" , showHomeColors ? " ▾" : " ▸")
           , showHomeColors && homeAccentLoaded && (
-            React.createElement('div', { style: { padding: "10px 4px 4px" },}
-              , React.createElement('div', { className: "lock-note", style: { marginBottom: 10 },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
+            React.createElement('div', { style: { padding: "10px 4px 4px", background: "blue", border: "4px solid white" },}
+              , React.createElement('div', { style: { color: "white", fontSize: 20, fontWeight: "bold", marginBottom: 10 },}, "COLOR PANEL ACTIVE")
+              , React.createElement('div', { className: "lock-note", style: { marginBottom: 10, color: "white" },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
               , React.createElement('div', { className: "team-color-swatch-row",}
                 , Object.keys(TEAM_THEMES).map((key) => {
                     const t = TEAM_THEMES[key];
@@ -8408,10 +8416,11 @@ function App() {
             )
           )
           , gSession && (
-            React.createElement('button', { className: "profile-settings-item", onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
+            React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
           )
         )
       )
+
 
       , showAddProfile && section === "player" && (
         React.createElement('div', { className: "add-profile-form",}
