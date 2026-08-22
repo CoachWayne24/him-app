@@ -8400,32 +8400,41 @@ function App() {
         React.createElement('div', { style: { position: "fixed", top: 130, left: 10, zIndex: 99999, background: "orange", color: "black", fontFamily: "monospace", fontSize: 14, fontWeight: "bold", padding: "10px" },}, "UNCONDITIONAL TEST BOX"
         )
       )
-      , section === "home" && showHomeMenu && (
-        React.createElement('div', { className: "profile-settings-menu", style: { background: "red", border: "4px solid white" },}
-          , isAdmin && React.createElement('div', { className: "hp-menu-status", style: { color: "white", fontSize: 18, fontWeight: "bold" },}, "ADMIN MODE")
-          , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); goSection("about"); },}, "About Coach Wayne")
-          , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => setShowHomeColors((s) => !s),}, "Personalize Accent Color" , showHomeColors ? " ▾" : " ▸")
-          , showHomeColors && homeAccentLoaded && (
-            React.createElement('div', { style: { padding: "10px 4px 4px", background: "blue", border: "4px solid white" },}
-              , React.createElement('div', { style: { color: "white", fontSize: 20, fontWeight: "bold", marginBottom: 10 },}, "COLOR PANEL ACTIVE")
-              , React.createElement('div', { className: "lock-note", style: { marginBottom: 10, color: "white" },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
-              , React.createElement('div', { className: "team-color-swatch-row",}
-                , Object.keys(TEAM_THEMES).map((key) => {
-                    const t = TEAM_THEMES[key];
-                    const isActive = homeAccent ? (homeAccent.accent === t.accent && homeAccent.accentSoft === t.accentSoft) : key === "gold";
-                    return React.createElement('button', { key: key, className: `team-color-swatch ${isActive ? "active" : ""}`, title: t.label, onClick: () => (key === "gold" ? clearHomeColors() : setHomeColors(t.accent, t.accentSoft)),}
-                      , React.createElement('span', { style: { background: t.accent },} )
-                      , React.createElement('span', { style: { background: t.accentSoft },} )
-                    );
-                  })
+      , section === "home" && showHomeMenu && (() => {
+          try {
+            return React.createElement('div', { className: "profile-settings-menu", style: { background: "red", border: "4px solid white" },}
+              , isAdmin && React.createElement('div', { className: "hp-menu-status", style: { color: "white", fontSize: 18, fontWeight: "bold" },}, "ADMIN MODE")
+              , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); goSection("about"); },}, "About Coach Wayne")
+              , React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => setShowHomeColors((s) => !s),}, "Personalize Accent Color" , showHomeColors ? " ▾" : " ▸")
+              , showHomeColors && homeAccentLoaded && (
+                React.createElement('div', { style: { padding: "10px 4px 4px", background: "blue", border: "4px solid white" },}
+                  , React.createElement('div', { style: { color: "white", fontSize: 20, fontWeight: "bold", marginBottom: 10 },}, "COLOR PANEL ACTIVE")
+                  , React.createElement('div', { className: "lock-note", style: { marginBottom: 10, color: "white" },}, "This changes only this device's accent color — HIM's brand mark stays gold."                )
+                  , React.createElement('div', { className: "team-color-swatch-row",}
+                    , Object.keys(TEAM_THEMES).map((key) => {
+                        const t = TEAM_THEMES[key];
+                        const isActive = homeAccent ? (homeAccent.accent === t.accent && homeAccent.accentSoft === t.accentSoft) : key === "gold";
+                        return React.createElement('button', { key: key, className: `team-color-swatch ${isActive ? "active" : ""}`, title: t.label, onClick: () => (key === "gold" ? clearHomeColors() : setHomeColors(t.accent, t.accentSoft)),}
+                          , React.createElement('span', { style: { background: t.accent },} )
+                          , React.createElement('span', { style: { background: t.accentSoft },} )
+                        );
+                      })
+                  )
+                )
               )
-            )
-          )
-          , gSession && (
-            React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
-          )
-        )
-      )
+              , gSession && (
+                React.createElement('button', { className: "profile-settings-item", style: { color: "white", fontSize: 18, fontWeight: "bold" }, onClick: () => { setShowHomeMenu(false); sb.auth.signOut(); },}, "Sign Out")
+              )
+            );
+          } catch (diagErr) {
+            return React.createElement('div', { style: { position: "fixed", top: 200, left: 10, right: 10, zIndex: 999999, background: "white", color: "red", fontFamily: "monospace", fontSize: 14, fontWeight: "bold", padding: "14px", border: "4px solid red", whiteSpace: "pre-wrap", wordBreak: "break-word" },}
+              , "MENU RENDER ERROR:\n" , String(diagErr && diagErr.message ? diagErr.message : diagErr)
+              , React.createElement('br', null )
+              , React.createElement('br', null )
+              , String(diagErr && diagErr.stack ? diagErr.stack : "(no stack)")
+            );
+          }
+        })()
 
 
       , showAddProfile && section === "player" && (
