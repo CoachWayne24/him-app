@@ -8400,6 +8400,8 @@ function App() {
         React.createElement('div', { style: { position: "fixed", top: 130, left: 10, zIndex: 99999, background: "orange", color: "black", fontFamily: "monospace", fontSize: 14, fontWeight: "bold", padding: "10px" },}, "UNCONDITIONAL TEST BOX"
         )
       )
+      , section === "home" && showHomeMenu && React.createElement('div', { style: { background: "lime", color: "black", fontSize: 30, fontWeight: "bold", padding: 20, margin: 10 },}, "TRIVIAL TEST"
+      )
       , section === "home" && showHomeMenu && (() => {
           try {
             return React.createElement('div', { className: "profile-settings-menu", style: { background: "red", border: "4px solid white" },}
